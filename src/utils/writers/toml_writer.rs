@@ -3,12 +3,14 @@ use std::path::PathBuf;
 use crate::{utilities::UniversalData, utils::BetterExpect};
 use toml::Value as toml_val;
 
-pub fn toml_writer(data: &UniversalData, path: &PathBuf) {
+pub fn toml_writer(data: &UniversalData, path: &PathBuf, verbose: bool) {
     // Check if input data is a table or struct-based (like JSON and TOML) data.
     if let UniversalData::Structured(non_toml) = data {
         // Serialize to TOML
-        let toml_ser = toml_val::try_from(non_toml)
-            .better_expect("ERROR: Couldn't serialize input file into TOML format.");
+        let toml_ser = toml_val::try_from(non_toml).better_expect(
+            "ERROR: Couldn't serialize input file into TOML format.",
+            verbose,
+        );
 
         // First, check if the data has a top level array to which TOML doesn't support to handle it
         if let toml_val::Array(arr) = toml_ser {
@@ -24,7 +26,7 @@ pub fn toml_writer(data: &UniversalData, path: &PathBuf) {
 
             // Write into the file.
             std::fs::write(path, output.trim_end())
-                .better_expect("ERROR: Failed to write final file.");
+                .better_expect("ERROR: Failed to write final file.", verbose);
 
         // If it doesn't have a top level Array, it will just write into the file.
         } else {
@@ -32,7 +34,7 @@ pub fn toml_writer(data: &UniversalData, path: &PathBuf) {
                 path,
                 toml::to_string_pretty(&toml_ser).unwrap_or(toml_ser.to_string()),
             )
-            .better_expect("ERROR: Failed to write into output file.");
+            .better_expect("ERROR: Failed to write into output file.", verbose);
         }
 
     // If table based, write into the file by making keys of the TOML tables (objects) the headers (column names) of the table.
@@ -64,6 +66,6 @@ pub fn toml_writer(data: &UniversalData, path: &PathBuf) {
         });
 
         std::fs::write(path, toml_str.trim_end())
-            .better_expect("ERROR: Failed to write into output file.");
+            .better_expect("ERROR: Failed to write into output file.", verbose);
     }
 }

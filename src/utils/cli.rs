@@ -8,25 +8,24 @@ use clap::{Parser, Subcommand, ValueHint::FilePath};
     version,
     about = "A blazingly fast utility fot converting between file formats.",
     long_about = r#"
-fiox, a blazingly fast, streaming-first file converter.
+Fiox, a blazingly fast, streaming-first file converter.
 
-It supports JSON, TOML, CSV, and soon NDJSON.
-Formats are detected automatically based on file content.
-Output format is determined by file extension.
+• It supports JSON, TOML, CSV, and soon NDJSON.
+• Formats are detected automatically based on file extension.
+• Streams files instead of loading them into memory all at once.
+• Supports file conversions and file validation.
+• if there are any bugs or features you want, open an issue at [`https://github.com/tahamahmoud7097-wq/fiox`].
 
 Examples:
-
-    fiox convert data.json out.csv
-    fiox validate broken.ndjson --verbose
-    fiox convert big.csv big.json --verbose
-
+   _________________________________________
+  |                                         |
+  | fiox convert data.json out.csv          |
+  | fiox validate broken.ndjson --verbose   |
+  | fiox convert big.csv big.json --verbose |
+  |_________________________________________|
 "#
 )]
 pub struct FioxArgs {
-    /// Flag for extra debug logging.
-    #[arg(short, long)]
-    pub verbose: bool,
-
     #[command(subcommand)]
     pub cmd: Commands,
 }
@@ -37,12 +36,15 @@ pub enum Commands {
     /// Convert command that takes two positional arguments for input and output, takes one
     /// flag [`verbose`] which enables extra logs and backtraces.
     Convert {
+        /// flag for extra debug logging
         #[arg(short, long)]
         verbose: bool,
 
+        /// Argument for input file path
         #[arg(required = true, value_hint = FilePath)]
         input: PathBuf,
 
+        /// Argument for output file path
         #[arg(required = true, value_hint = FilePath)]
         output: PathBuf,
     },
@@ -51,9 +53,11 @@ pub enum Commands {
     /// to be checked and a flag [`verbose`] which enables extra logs, backtraces and exact
     /// line errors.
     Validate {
+        /// path to the file to be validated
         #[arg(required = true, value_hint = FilePath)]
         input: PathBuf,
 
+        /// flag for extra debug logging
         #[arg(short, long)]
         verbose: bool,
     },

@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use colored::Colorize;
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value as JsonVal;
@@ -38,17 +40,21 @@ pub enum UniversalData {
 // Custom better expect trait for better error messages without duping code
 
 pub trait BetterExpect<T> {
-    fn better_expect(self, msg: &str) -> T;
+    fn better_expect(self, msg: &str, verbose: bool) -> T;
 }
 
 // impl for Result which matches the value to Ok to return the value or print the error msg in red if Err
-impl<T, E> BetterExpect<T> for Result<T, E> {
-    fn better_expect(self, msg: &str) -> T {
+impl<T, E: std::fmt::Display> BetterExpect<T> for Result<T, E> {
+    fn better_expect(self, msg: &str, verbose: bool) -> T {
         match self {
             Ok(v) => v,
-            Err(_) => {
+            Err(_) if !verbose => {
                 eprintln!("{}", msg.red().bold());
-                std::process::exit(1);
+                exit(1);
+            }
+            Err(e) => {
+                eprintln!("{}\n{}", msg.red().bold(), e);
+                exit(1);
             }
         }
     }
@@ -57,12 +63,12 @@ impl<T, E> BetterExpect<T> for Result<T, E> {
 // impl for Option to match the value for Some to return the actual value and if None prints error msg in red
 
 impl<T> BetterExpect<T> for Option<T> {
-    fn better_expect(self, msg: &str) -> T {
+    fn better_expect(self, msg: &str, _verbose: bool) -> T {
         match self {
             Some(v) => v,
             None => {
                 eprintln!("{}", msg.red().bold());
-                std::process::exit(1);
+                exit(1);
             }
         }
     }
