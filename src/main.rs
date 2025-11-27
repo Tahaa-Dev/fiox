@@ -126,6 +126,7 @@ fn main() {
                 "json" => json_validator::validate_json(&input, verbose),
                 "toml" => toml_validator::validate_toml(&input, verbose),
                 "csv" => csv_validator::validate_csv(&input, verbose),
+                "ndjson" => ndjson_validator::validate_ndjson(&input, verbose),
                 _ => {
                     eprintln!(
                         "{} \n Open an issue at {}",
