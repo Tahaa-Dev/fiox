@@ -3,6 +3,7 @@ use std::process::exit;
 use colored::Colorize;
 
 use csv::ByteRecord;
+use serde::Serialize;
 
 pub enum WriterStreams<I: Iterator<Item = ByteTypes>> {
     LineByLine { iter: I },
@@ -14,6 +15,18 @@ pub enum ByteTypes {
     Raw(Vec<u8>),
 
     Csv(ByteRecord),
+}
+
+impl Serialize for ByteTypes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            ByteTypes::Raw(v) => v.serialize(serializer),
+            ByteTypes::Csv(v) => v.as_slice().serialize(serializer),
+        }
+    }
 }
 
 pub fn into_raw_bytes(bytes: ByteTypes) -> Vec<u8> {
