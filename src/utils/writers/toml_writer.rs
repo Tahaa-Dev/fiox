@@ -4,6 +4,8 @@ use std::{
     path::PathBuf,
 };
 
+use toml::map::Map;
+
 use crate::utils::{BetterExpect, WriterStreams, into_byte_record};
 
 pub fn toml_writer(data_stream: WriterStreams, path: &PathBuf, verbose: bool) {
@@ -23,9 +25,17 @@ pub fn toml_writer(data_stream: WriterStreams, path: &PathBuf, verbose: bool) {
             iter.for_each(|rec| {
                 let toml_object = toml::Value::try_from(rec)
                     .better_expect("ERROR: Failed to serialize value into TOML", verbose);
+                let valid_object = match toml_object {
+                    toml::Value::Array(_) => {
+                        let mut map = Map::new();
+                        map.insert("Array".to_string(), toml_object);
+                        toml::Value::Table(map)
+                    }
+                    _ => toml_object,
+                };
 
                 buffered_writer.write(
-                    toml::to_string_pretty(&toml_object)
+                    toml::to_string_pretty(&valid_object)
                     .better_expect("INTERNAL ERROR: Failed to turn TOML into bytes for writing (possible OOM or deeply nested data)!", true)
                     .as_bytes())
                     .better_expect(
