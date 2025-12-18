@@ -13,6 +13,8 @@ where
 
     Table { headers: Vec<String>, iter: I },
 
+    Ndjson { values: I },
+
     Temp {},
 }
 

@@ -156,6 +156,34 @@ pub fn write_json(
                 .better_expect("ERROR: Failed to flush final writer bytes.", verbose);
         }
 
-        _ => {}
+        WriterStreams::Ndjson { values } => {
+            buffered_writer
+                .write_all(b"[\n")
+                .better_expect("ERROR: Failed to write opening bracket into output file.", verbose);
+
+            let mut first = true;
+
+            values.for_each(|obj| {
+                if first {
+                    serde_json::to_writer_pretty(&mut buffered_writer, &obj)
+                        .better_expect("ERROR: Failed to write object into output file.", verbose);
+
+                    first = false;
+                } else {
+                    buffered_writer
+                        .write_all(b",\n")
+                        .better_expect("ERROR: Failed to write comma into output file.", verbose);
+
+                    serde_json::to_writer_pretty(&mut buffered_writer, &obj)
+                        .better_expect("ERROR: Failed to write object into output file.", verbose);
+                }
+            });
+
+            buffered_writer
+                .write_all(b"\n]")
+                .better_expect("ERROR: Failed to write closing bracket into output file.", verbose);
+        }
+
+        _ => unreachable!(),
     }
 }

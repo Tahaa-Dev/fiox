@@ -60,10 +60,19 @@ pub fn toml_writer(
                 })
                 .collect();
 
+            let mut first_row = true;
+
             iter.for_each(|rec| {
-                buffered_writer
-                    .write(b"\n[[Rows]]\n")
-                    .better_expect("ERROR: Failed to write into output file.", verbose);
+                if !first_row {
+                    buffered_writer
+                        .write(b"\n[[Rows]]\n")
+                        .better_expect("ERROR: Failed to write into output file.", verbose);
+                } else {
+                    buffered_writer
+                        .write(b"[[Rows]]\n")
+                        .better_expect("ERROR: Failed to write into output file.", verbose);
+                    first_row = false;
+                }
 
                 let record = into_byte_record(rec);
 
@@ -139,6 +148,32 @@ pub fn toml_writer(
             });
         }
 
-        _ => {}
+        WriterStreams::Ndjson { values } => {
+            let mut first_row = true;
+
+            values.for_each(|obj| {
+                if !first_row {
+                    buffered_writer
+                        .write(b"\n[[Array]]\n")
+                        .better_expect("ERROR: Failed to write into output file.", verbose);
+                } else {
+                    buffered_writer
+                        .write(b"[[Array]]\n")
+                        .better_expect("ERROR: Failed to write into output file.", verbose);
+                    first_row = false;
+                }
+
+                buffered_writer.write(
+                    toml::to_string_pretty(&toml::Value::try_from(&obj).better_expect("ERROR: Invalid TOML values in input file.", verbose))
+                    .better_expect("INTERNAL ERROR: Failed to turn TOML into bytes for writing (possible OOM or deeply nested data)!", true)
+                    .as_bytes())
+                    .better_expect(
+                    "ERROR: Failed to write TOML into output file.", 
+                         verbose
+                    );
+            });
+        }
+
+        _ => unreachable!(),
     }
 }

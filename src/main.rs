@@ -41,13 +41,14 @@ fn main() {
 
             let now = std::time::Instant::now();
 
-            let (json, toml, csv, idx) = get_data_stream(input_ext, &input, verbose);
+            let (json, toml, csv, ndjson, idx) = get_data_stream(input_ext, &input, verbose);
 
             match idx {
                 0 => match_output(json, output_file, verbose, output_ext, parse_numbers),
                 1 => match_output(toml, output_file, verbose, output_ext, parse_numbers),
                 2 => match_output(csv, output_file, verbose, output_ext, parse_numbers),
-                _ => {}
+                3 => match_output(ndjson, output_file, verbose, output_ext, parse_numbers),
+                _ => unreachable!(),
             };
 
             println!(
@@ -110,11 +111,13 @@ fn get_data_stream(
     WriterStreams<impl Iterator<Item = DataTypes>>,
     WriterStreams<impl Iterator<Item = DataTypes>>,
     WriterStreams<impl Iterator<Item = DataTypes>>,
+    WriterStreams<impl Iterator<Item = DataTypes>>,
     i8,
 ) {
     let mut data1 = WriterStreams::Temp {};
     let mut data2 = WriterStreams::Temp {};
     let mut data3 = WriterStreams::Temp {};
+    let mut data4 = WriterStreams::Temp {};
     let num;
     match input_ext {
         "json" => {
@@ -129,6 +132,13 @@ fn get_data_stream(
             data3 = csv_decoder::csv_decoder(csv_reader::csv_reader(input, verbose), verbose);
             num = 2
         }
+        "ndjson" => {
+            data4 = ndjson_decoder::ndjson_decoder(
+                ndjson_reader::ndjson_reader(input, verbose),
+                verbose,
+            );
+            num = 3
+        }
         _ => {
             let repo_link = "https://github.com/Tahaa-Dev/fiox".truecolor(16, 101, 230).bold();
             eprintln!(
@@ -141,7 +151,7 @@ fn get_data_stream(
             exit(1);
         }
     };
-    (data1, data2, data3, num)
+    (data1, data2, data3, data4, num)
 }
 
 fn match_output(
@@ -155,6 +165,7 @@ fn match_output(
         "json" => write_json::write_json(data, output, verbose, parse_numbers),
         "toml" => toml_writer::toml_writer(data, output, verbose, parse_numbers),
         "csv" => csv_writer::csv_writer(data, output, verbose),
+        "ndjson" => ndjson_writer::ndjson_writer(data, verbose, output, parse_numbers),
         _ => {
             let repo_link = "https://github.com/Tahaa-Dev/fiox".truecolor(16, 101, 230).bold();
             eprintln!(

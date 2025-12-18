@@ -44,5 +44,5 @@ pub fn ndjson_decoder(
         }
     });
 
-    WriterStreams::Values { iter }
+    WriterStreams::Ndjson { values: iter }
 }
