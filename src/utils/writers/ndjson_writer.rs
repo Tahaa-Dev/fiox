@@ -5,7 +5,7 @@ use std::{
 
 use serde_json::Value;
 
-use crate::utils::{BetterExpect, DataTypes, WriterStreams, into_byte_record};
+use crate::utils::{BetterExpect, DataTypes, WriterStreams, escape, into_byte_record};
 
 #[inline]
 pub fn ndjson_writer(
@@ -78,41 +78,9 @@ pub fn ndjson_writer(
                         esc_buf.extend_from_slice(v);
                     } else {
                         esc_buf.push(b'"');
-                        let mut start = 0usize;
-                        v.iter().enumerate().for_each(|(idx, byte)| {
-                            let chunk = &v[start..idx];
-                            match *byte {
-                                b'\\' => {
-                                    esc_buf.extend_from_slice(chunk);
-                                    esc_buf.extend_from_slice(b"\\\\");
-                                    start = idx + 1;
-                                }
-                                b'\n' => {
-                                    esc_buf.extend_from_slice(chunk);
-                                    esc_buf.extend_from_slice(b"\\n");
-                                    start = idx + 1;
-                                }
-                                b'"' => {
-                                    esc_buf.extend_from_slice(chunk);
-                                    esc_buf.extend_from_slice(b"\\\"");
-                                    start = idx + 1;
-                                }
-                                b'\t' => {
-                                    esc_buf.extend_from_slice(chunk);
-                                    esc_buf.extend_from_slice(b"\\t");
-                                    start = idx + 1;
-                                }
-                                b'\r' => {
-                                    esc_buf.extend_from_slice(chunk);
-                                    esc_buf.extend_from_slice(b"\\r");
-                                    start = idx + 1;
-                                }
-                                _ => {}
-                            }
+                        v.iter().for_each(|byte| {
+                            escape(*byte, &mut esc_buf);
                         });
-                        if start < v.len() {
-                            esc_buf.extend_from_slice(&v[start..]);
-                        }
                         esc_buf.push(b'"');
                     } 
                     if first_value {

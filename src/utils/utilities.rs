@@ -79,3 +79,30 @@ impl<T> BetterExpect<T> for Option<T> {
         }
     }
 }
+
+const NEEDS_ESCAPE: [bool; 256] = {
+    let mut table = [false; 256];
+    table[b'\\' as usize] = true;
+    table[b'"' as usize] = true;
+    table[b'\n' as usize] = true;
+    table[b'\r' as usize] = true;
+    table[b'\t' as usize] = true;
+    table
+};
+
+pub fn escape(byte: u8, output: &mut Vec<u8>) {
+    if NEEDS_ESCAPE[byte as usize] {
+        output.reserve_exact(2);
+        output.push(b'\\');
+        match byte {
+            b'\\' => output.push(b'\\'),
+            b'"' => output.push(b'"'),
+            b'\n' => output.push(b'n'),
+            b'\r' => output.push(b'r'),
+            b'\t' => output.push(b't'),
+            _ => unreachable!(),
+        }
+    } else {
+        output.push(byte);
+    }
+}
