@@ -203,9 +203,9 @@ dependencies = [
 
 [[package]]
 name = "resext"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "244b9c860677bea7a111d7f3a28ba77ee2a7f90b3075ae0db8b7e8c5df55f12f"
+checksum = "07ea755abb31dc2e7d4c34218ffccc16feb6a6463bf0e050c324e0d7a5783f17"
 
 [[package]]
 name = "ryu"

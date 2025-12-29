@@ -1,12 +1,12 @@
-use std::process::exit;
+use std::io::Error;
 
 use csv::ByteRecord;
-use resext::CtxResult;
+use resext::{CtxResult, ResExt};
 use serde::Serialize;
 
 pub enum WriterStreams<I>
 where
-    I: Iterator<Item = CtxResult<DataTypes, std::io::Error>>,
+    I: Iterator<Item = CtxResult<DataTypes, Error>>,
 {
     Values { iter: I },
 
@@ -33,13 +33,16 @@ impl Serialize for DataTypes {
         match self {
             DataTypes::Json(j) => j.serialize(serializer),
             DataTypes::Toml(t) => t.serialize(serializer),
-            DataTypes::Csv(c) => c.as_slice().serialize(serializer),
+            DataTypes::Csv(_) => unreachable!(),
         }
     }
 }
 
-pub fn into_byte_record(brecord: DataTypes) -> ByteRecord {
-    if let DataTypes::Csv(brec) = brecord { brec } else { ByteRecord::new() }
+pub fn into_byte_record(brec: CtxResult<DataTypes, Error>) -> CtxResult<ByteRecord, Error> {
+    match brec.context("Failed to unwrap record")? {
+        DataTypes::Csv(csv) => Ok(csv),
+        _ => unreachable!(),
+    }
 }
 
 const NEEDS_ESCAPE: [bool; 256] = {

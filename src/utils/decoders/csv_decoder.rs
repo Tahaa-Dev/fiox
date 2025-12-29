@@ -10,7 +10,6 @@ use crate::utils::{DataTypes, WriterStreams};
 #[inline]
 pub fn csv_decoder(
     mut reader: csv::Reader<BufReader<File>>,
-    verbose: bool,
 ) -> CtxResult<WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>, Error> {
     let headers = reader
         .headers()
@@ -23,16 +22,15 @@ pub fn csv_decoder(
     let iter = reader.into_byte_records().enumerate().map(move |(line_no, rec)| {
         let record = rec
             .map_err(|_| Error::new(EK::InvalidData, "Invalid CSV record"))
-            .with_context(|| format!("Invalid CSV data in input file at line: {}", line_no + 1))?;
+            .context("Failed to deserialize file")
+            .with_context(|| format!("Invalid CSV data in input file at line: {}", line_no + 1));
 
-        Ok(DataTypes::Csv(record))
+        if record.is_err() {
+            Err(unsafe { record.unwrap_err_unchecked() }).context(crate::VERBOSE_HELP)
+        } else {
+            Ok(DataTypes::Csv(unsafe { record.unwrap_unchecked() }))
+        }
     });
-
-    if verbose {
-        println!(
-            "Input file is valid and was deserialized successfully.\nProcessing and writing will start."
-        );
-    }
 
     Ok(WriterStreams::Table { headers, iter })
 }

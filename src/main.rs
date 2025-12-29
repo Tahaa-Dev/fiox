@@ -7,11 +7,13 @@ use std::path::{Path, PathBuf};
 use std::process::exit;
 use utils::*;
 
+pub const VERBOSE_HELP: &str = "Try to use `fiox validate <INPUT> -v` for more information";
+
 fn main() -> CtxResult<(), Error> {
     let args: FioxArgs = cli::FioxArgs::parse();
 
     match args.cmd {
-        Commands::Convert { verbose, input, output, append, parse_numbers } => {
+        Commands::Convert { input, output, append, parse_numbers } => {
             // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
@@ -43,13 +45,13 @@ fn main() -> CtxResult<(), Error> {
 
             let now = std::time::Instant::now();
 
-            let (json, toml, csv, ndjson, idx) = get_data_stream(input_ext, &input, verbose);
+            let (json, toml, csv, ndjson, idx) = get_data_stream(input_ext, &input);
 
             match idx {
-                0 => match_output(json, output_file, verbose, output_ext, parse_numbers),
-                1 => match_output(toml, output_file, verbose, output_ext, parse_numbers),
-                2 => match_output(csv, output_file, verbose, output_ext, parse_numbers),
-                3 => match_output(ndjson, output_file, verbose, output_ext, parse_numbers),
+                0 => match_output(json, output_file, output_ext, parse_numbers),
+                1 => match_output(toml, output_file, output_ext, parse_numbers),
+                2 => match_output(csv, output_file, output_ext, parse_numbers),
+                3 => match_output(ndjson, output_file, output_ext, parse_numbers),
                 _ => unreachable!(),
             };
 
@@ -98,12 +100,11 @@ fn main() -> CtxResult<(), Error> {
 fn get_data_stream(
     input_ext: &str,
     input: &PathBuf,
-    verbose: bool,
 ) -> (
-    WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
-    WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
-    WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
-    WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
+    WriterStreams<impl Iterator<Item = DataTypes>>,
+    WriterStreams<impl Iterator<Item = DataTypes>>,
+    WriterStreams<impl Iterator<Item = DataTypes>>,
+    WriterStreams<impl Iterator<Item = DataTypes>>,
     u8,
 ) {
     let mut data1 = WriterStreams::Temp {};
@@ -111,27 +112,22 @@ fn get_data_stream(
     let mut data3 = WriterStreams::Temp {};
     let mut data4 = WriterStreams::Temp {};
     let num;
+    // The return of streams of all decoders is guaranteed to be `Ok` so `.unwrap()` is safe
     match input_ext {
         "json" => {
-            data1 = json_decoder::json_decoder(json_reader::json_reader(input, verbose), verbose)
-                .unwrap();
+            data1 = json_decoder::json_decoder(json_reader::json_reader(input)).unwrap();
             num = 0;
         }
         "toml" => {
-            data2 = toml_decoder::toml_decoder(toml_reader::toml_reader(input, verbose)).unwrap();
+            data2 = toml_decoder::toml_decoder(toml_reader::toml_reader(input)).unwrap();
             num = 1;
         }
         "csv" => {
-            data3 =
-                csv_decoder::csv_decoder(csv_reader::csv_reader(input, verbose), verbose).unwrap();
+            data3 = csv_decoder::csv_decoder(csv_reader::csv_reader(input)).unwrap();
             num = 2
         }
         "ndjson" => {
-            data4 = ndjson_decoder::ndjson_decoder(
-                ndjson_reader::ndjson_reader(input, verbose),
-                verbose,
-            )
-            .unwrap();
+            data4 = ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(input)).unwrap();
             num = 3
         }
         _ => {
@@ -147,17 +143,16 @@ fn get_data_stream(
 }
 
 fn match_output(
-    data: WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
+    data: WriterStreams<impl Iterator<Item = DataTypes>>,
     output: std::fs::File,
-    verbose: bool,
     output_ext: &str,
     parse_numbers: bool,
 ) {
     match output_ext {
-        "json" => write_json::write_json(data, output, verbose, parse_numbers),
-        "toml" => toml_writer::toml_writer(data, output, verbose, parse_numbers),
-        "csv" => csv_writer::csv_writer(data, output, verbose),
-        "ndjson" => ndjson_writer::ndjson_writer(data, verbose, output, parse_numbers),
+        "json" => write_json::write_json(data, output, parse_numbers),
+        "toml" => toml_writer::toml_writer(data, output, parse_numbers),
+        "csv" => csv_writer::csv_writer(data, output),
+        "ndjson" => ndjson_writer::ndjson_writer(data, output, parse_numbers),
         _ => {
             let repo_link = "https://github.com/Tahaa-Dev/fiox";
             eprintln!(

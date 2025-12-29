@@ -36,10 +36,6 @@ pub enum Commands {
     /// Convert command that takes two positional arguments for input and output, takes one
     /// flag [`verbose`] which enables extra logs and soon backtraces.
     Convert {
-        /// flag for extra debug logging
-        #[arg(short, long)]
-        verbose: bool,
-
         /// Argument for input file path
         #[arg(required = true, value_hint = FilePath)]
         input: PathBuf,
