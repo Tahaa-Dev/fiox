@@ -13,7 +13,14 @@ fn main() -> CtxResult<(), Error> {
     let args: FioxArgs = cli::FioxArgs::parse();
 
     match args.cmd {
-        Commands::Convert { input, output, append, parse_numbers } => {
+        Commands::Convert {
+            input,
+            output,
+            append,
+            parse_numbers,
+            input_delimiter,
+            output_delimiter,
+        } => {
             // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
@@ -31,51 +38,68 @@ fn main() -> CtxResult<(), Error> {
                 .open(&output)
                 .context("Failed to open output file.")?;
 
-            let input_ext: &str = &input
-                .extension()
-                .ok_or_else(|| Error::new(EK::InvalidFilename, "Input file has no extension"))
-                .context("Failed to get input file's extension")?
-                .to_string_lossy();
-
-            let output_ext: &str = &output
-                .extension()
-                .ok_or_else(|| Error::new(EK::InvalidFilename, "Output file has no extension"))
-                .context("Failed to get output file's extension")?
-                .to_string_lossy();
+            let o_d: char;
 
             let now = std::time::Instant::now();
 
-            match input_ext {
-                "json" => {
-                    let data = json_decoder::json_decoder(json_reader::json_reader(&input))
-                        .context("FATAL: Deserialization failed")?;
+            let output_ext;
+            if let Some(ch) = output_delimiter {
+                output_ext = std::borrow::Cow::Borrowed("csv");
+                o_d = ch;
+            } else {
+                output_ext = output
+                    .extension()
+                    .ok_or_else(|| Error::new(EK::InvalidFilename, "Output file has no extension"))
+                    .context("Failed to get output file's extension")?
+                    .to_string_lossy();
+                o_d = ',';
+            }
 
-                    match_output(data, output_file, output_ext, parse_numbers)?;
-                }
-                "toml" => {
-                    let data = toml_decoder::toml_decoder(toml_reader::toml_reader(&input))
-                        .context("FATAL: Deserialization failed")?;
-                    match_output(data, output_file, output_ext, parse_numbers)?;
-                }
-                "csv" => {
-                    let data = csv_decoder::csv_decoder(csv_reader::csv_reader(&input))
-                        .context("FATAL: Deserialization failed")?;
-                    match_output(data, output_file, output_ext, parse_numbers)?;
-                }
-                "ndjson" => {
-                    let data = ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(&input))
-                        .context("FATAL: Deserialization failed")?;
-                    match_output(data, output_file, output_ext, parse_numbers)?;
-                }
-                _ => {
-                    let repo_link = "https://github.com/Tahaa-Dev/fiox";
-                    eprintln!(
-                        "FATAL: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
-                        input_ext, repo_link,
-                    );
-                    exit(1);
-                }
-            };
+            if let Some(ch) = input_delimiter {
+                let data = csv_decoder::csv_decoder(csv_reader::csv_reader(&input, ch))
+                    .context("FATAL: Deserialization failed")?;
+
+                match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+            } else {
+                let input_ext: &str = &input
+                    .extension()
+                    .ok_or_else(|| Error::new(EK::InvalidFilename, "Input file has no extension"))
+                    .context("Failed to get input file's extension")?
+                    .to_string_lossy();
+
+                match input_ext {
+                    "json" => {
+                        let data = json_decoder::json_decoder(json_reader::json_reader(&input))
+                            .context("FATAL: Deserialization failed")?;
+
+                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                    }
+                    "toml" => {
+                        let data = toml_decoder::toml_decoder(toml_reader::toml_reader(&input))
+                            .context("FATAL: Deserialization failed")?;
+                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                    }
+                    "csv" => {
+                        let data = csv_decoder::csv_decoder(csv_reader::csv_reader(&input, ','))
+                            .context("FATAL: Deserialization failed")?;
+                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                    }
+                    "ndjson" => {
+                        let data =
+                            ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(&input))
+                                .context("FATAL: Deserialization failed")?;
+                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                    }
+                    _ => {
+                        let repo_link = "https://github.com/Tahaa-Dev/fiox";
+                        eprintln!(
+                            "FATAL: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
+                            input_ext, repo_link,
+                        );
+                        exit(1);
+                    }
+                };
+            }
 
             println!("Finished in {:?}", now.elapsed());
         }
@@ -120,6 +144,7 @@ fn match_output(
     output_file: std::fs::File,
     output_ext: &str,
     parse_numbers: bool,
+    o_d: char,
 ) -> CtxResult<(), Error> {
     match output_ext {
         "json" => write_json::write_json(data, output_file, parse_numbers)
@@ -127,7 +152,7 @@ fn match_output(
         "toml" => toml_writer::toml_writer(data, output_file, parse_numbers)
             .context("FATAL: Serialization failed")?,
         "csv" => {
-            csv_writer::csv_writer(data, output_file).context("FATAL: Serialization failed")?
+            csv_writer::csv_writer(data, output_file, o_d).context("FATAL: Serialization failed")?
         }
         "ndjson" => ndjson_writer::ndjson_writer(data, output_file, parse_numbers)
             .context("FATAL: Serialization failed")?,

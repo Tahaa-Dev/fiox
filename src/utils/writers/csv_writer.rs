@@ -1,4 +1,4 @@
-use resext::{CtxResult, ErrCtx, ResExt};
+use resext::{CtxResult, ErrCtx, ResExt, throw_err_if};
 
 use crate::utils::{DataTypes, WriterStreams, into_byte_record};
 
@@ -8,9 +8,18 @@ use std::io::{BufWriter, Error};
 pub fn csv_writer(
     data_stream: WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
     file: std::fs::File,
+    delimiter: char,
 ) -> CtxResult<(), Error> {
     let buffered = BufWriter::new(file);
-    let mut wtr = csv::Writer::from_writer(buffered);
+
+    throw_err_if!(
+        !delimiter.is_ascii(),
+        || format!("FATAL: Output delimiter: {} is not valid UTF-8", delimiter),
+        1
+    );
+
+    let d = delimiter as u8;
+    let mut wtr = csv::WriterBuilder::new().delimiter(d).from_writer(buffered);
 
     match data_stream {
         WriterStreams::Table { headers, iter } => {

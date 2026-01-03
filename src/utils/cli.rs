@@ -52,6 +52,18 @@ pub enum Commands {
         /// Argument for actually parsing numbers in manual TOML / JSON writers
         #[arg(short, long)]
         parse_numbers: bool,
+
+        /// Argument for specifying delimiters for CSV / CSV-like input formats (e.g. TSV, PSV, etc.).
+        /// This flag makes fiox ignore the extension and instead treat the file as a CSV
+        /// with the specified delimiter instead of commas.
+        #[arg(short, long)]
+        input_delimiter: Option<char>,
+
+        /// Argument for specifying delimiters for CSV / CSV-like output formats (e.g. TSV, PSV, etc.).
+        /// This flag makes fiox ignore the extension and instead treat the file as a CSV
+        /// with the specified delimiter instead of commas.
+        #[arg(long)]
+        output_delimiter: Option<char>,
     },
 
     /// Validate command for file format validation with one positional argument for the file
