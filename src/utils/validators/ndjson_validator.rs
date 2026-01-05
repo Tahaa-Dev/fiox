@@ -1,13 +1,13 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Error, ErrorKind as EK},
+    io::{BufRead, BufReader},
     path::PathBuf,
 };
 
 use resext::{CtxResult, ResExt};
 use serde::de::IgnoredAny;
 
-pub fn validate_ndjson(path: &PathBuf, verbose: bool) -> CtxResult<(), Error> {
+pub fn validate_ndjson(path: &PathBuf) -> CtxResult<(), std::io::Error> {
     let file = File::open(path)
         .context("Failed to validate file")
         .with_context(|| format!("Failed to open input file: {}", &path.to_string_lossy()))?;
@@ -17,6 +17,7 @@ pub fn validate_ndjson(path: &PathBuf, verbose: bool) -> CtxResult<(), Error> {
     // read lines one by one and deserialize them to check for errors
     let mut buf: Vec<u8> = Vec::new();
     let mut idx: usize = 1;
+    let mut res = Ok(());
 
     loop {
         // check for line reading errors
@@ -31,24 +32,23 @@ pub fn validate_ndjson(path: &PathBuf, verbose: bool) -> CtxResult<(), Error> {
 
         // check line validity
         serde_json::from_slice::<IgnoredAny>(&buf)
-            .map_err(|_| Error::new(EK::InvalidData, "Invalid NDJSON data"))
-            .context("Input file is invalid")
-            .with_context(|| {
-                format!(
-                    "Invalid NDJSON values in input file: {} at line: {}",
-                    &path.to_string_lossy(),
-                    idx
-                )
-            })?;
+            .with_context(|| format!("Invalid NDJSON values in input file at line: {}", idx))
+            .unwrap_or_else(|e: resext::ErrCtx<serde_json::Error>| {
+                eprintln!("{e}");
+                if res.is_ok() {
+                    res = Err(resext::ErrCtx::new(
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Invalid JSON in input file",
+                        ),
+                        b"Input file is invalid".to_vec(),
+                    ));
+                }
+                IgnoredAny
+            });
         buf.clear();
         idx += 1;
     }
 
-    if verbose {
-        println!("File: {} is valid", &path.to_string_lossy())
-    } else {
-        println!("File is valid")
-    }
-
-    Ok(())
+    res
 }

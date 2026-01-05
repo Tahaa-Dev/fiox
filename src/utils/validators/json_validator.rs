@@ -1,14 +1,10 @@
 use resext::{CtxResult, ResExt};
 use serde::de::IgnoredAny;
 use serde_json::Deserializer;
-use std::{
-    fs::File,
-    io::{BufReader, Error, ErrorKind as EK},
-    path::PathBuf,
-};
+use std::{fs::File, io::BufReader, path::PathBuf};
 
-pub fn validate_json(path: &PathBuf, _verbose: bool) -> CtxResult<(), Error> {
-    let file: File = File::open(path)
+pub fn validate_json(path: &PathBuf) -> CtxResult<(), std::io::Error> {
+    let file = File::open(path)
         .context("Failed to validate file")
         .with_context(|| format!("Failed to open input file: {}", &path.to_string_lossy()))?;
 
@@ -16,15 +12,26 @@ pub fn validate_json(path: &PathBuf, _verbose: bool) -> CtxResult<(), Error> {
 
     let file_stream = Deserializer::from_reader(reader).into_iter::<IgnoredAny>();
 
+    let mut res = Ok(());
+
     for item in file_stream {
-        item.map_err(|_| Error::new(EK::InvalidData, "Invalid JSON values"))
-            .context("Input file is invalid")
-            .with_context(|| {
-                format!("Invalid JSON data in input file: {}", &path.to_string_lossy())
-            })?;
+        item.with_context(|| {
+            format!("Invalid JSON data in input file: {}", &path.to_string_lossy())
+        })
+        .unwrap_or_else(|e: resext::ErrCtx<serde_json::Error>| {
+            eprintln!("{e}");
+            if res.is_ok() {
+                res = Err(resext::ErrCtx::new(
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "Invalid JSON in input file",
+                    ),
+                    b"Input file is invalid".to_vec(),
+                ));
+            }
+            IgnoredAny
+        });
     }
 
-    println!("Input file: {} is valid", &path.to_string_lossy());
-
-    Ok(())
+    res
 }

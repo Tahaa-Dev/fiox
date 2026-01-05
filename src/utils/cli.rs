@@ -6,28 +6,34 @@ use clap::{Parser, Subcommand, ValueHint::FilePath};
 #[command(
     author,
     version,
-    about = "A blazingly fast utility for handling files with different formats.",
+    about = "The fastest utility for converting between file formats.",
     long_about = r#"
-Fiox, a blazingly fast, streaming-first file handler.
+fiox: The fastest streaming-first file conveter.
 
-• It supports JSON, TOML, CSV, and NDJSON.
-• Formats are detected automatically based on file extension.
-• Streams files instead of loading them into memory all at once.
-• Supports file conversions and file validation.
-• if there are any bugs or features you want, open an issue at [`https://github.com/Tahaa-Dev/fiox`].
+  • Supports JSON, NDJSON, TOML, CSV, TSV, PSV and more!
 
-Examples:
-   _________________________________________
-  |                                         |
-  | fiox convert data.json out.csv          |
-  | fiox validate broken.ndjson --verbose   |
-  | fiox convert big.csv big.json --verbose |
-  |_________________________________________|
+  • Formats are detected automatically based on file extension, except for custom 
+    delimter CSV formats (e.g. TSV, PSV, etc.), which are detected with `--input-delimiter <DELIMITER>` and `--output-delimiter <DELIMITER>`.
+
+  • if there are any bugs or any features you want, open an issue at: `https://github.com/Tahaa-Dev/fiox`.
+
+
+/———Examples——————————————————————————————\
+|                                     ••• |
+| fiox convert data.json out.csv          |
+| fiox validate broken.ndjson --verbose   |
+| fiox convert big.csv big.json --verbose |
+|_________________________________________|
 "#
 )]
 pub struct FioxArgs {
     #[command(subcommand)]
     pub cmd: Commands,
+
+    /// Argument for setting a Markdown (MD) file to export error logs to.
+    /// Will panic and abort if file doesn't have the extension `.md`.
+    #[arg(short, long, value_hint = FilePath)]
+    pub log_file: Option<PathBuf>,
 }
 
 /// Fiox subcommands
@@ -49,7 +55,7 @@ pub enum Commands {
         #[arg(short, long)]
         append: bool,
 
-        /// Argument for actually parsing numbers in manual TOML / JSON writers
+        /// Argument for parsing numbers in manual TOML / JSON writers
         #[arg(short, long)]
         parse_numbers: bool,
 
@@ -73,9 +79,5 @@ pub enum Commands {
         /// path to the file to be validated
         #[arg(required = true, value_hint = FilePath)]
         input: PathBuf,
-
-        /// flag for extra debug logging
-        #[arg(short, long)]
-        verbose: bool,
     },
 }

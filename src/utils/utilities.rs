@@ -43,7 +43,7 @@ pub fn into_byte_record(brec: CtxResult<DataTypes, Error>) -> CtxResult<ByteReco
     }
 }
 
-const NEEDS_ESCAPE: [bool; 256] = {
+static NEEDS_ESCAPE: [bool; 256] = {
     let mut table = [false; 256];
     table[b'\\' as usize] = true;
     table[b'"' as usize] = true;

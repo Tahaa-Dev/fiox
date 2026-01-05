@@ -5,14 +5,17 @@ use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind as EK};
 use std::path::Path;
 use std::process::exit;
+use std::sync::LazyLock;
 use utils::*;
 
 pub const VERBOSE_HELP: &str = "Try to use `fiox validate <INPUT> -v` for more information";
 
-fn main() -> CtxResult<(), Error> {
-    let args: FioxArgs = cli::FioxArgs::parse();
+pub static ARGS: LazyLock<FioxArgs> = LazyLock::new(FioxArgs::parse);
 
-    match args.cmd {
+fn main() -> CtxResult<(), Error> {
+    let args = &*ARGS;
+
+    match &args.cmd {
         Commands::Convert {
             input,
             output,
@@ -34,8 +37,8 @@ fn main() -> CtxResult<(), Error> {
             let output_file = OpenOptions::new()
                 .create(true)
                 .write(true)
-                .append(append)
-                .open(&output)
+                .append(*append)
+                .open(output)
                 .context("Failed to open output file.")?;
 
             let o_d: char;
@@ -45,7 +48,7 @@ fn main() -> CtxResult<(), Error> {
             let output_ext;
             if let Some(ch) = output_delimiter {
                 output_ext = std::borrow::Cow::Borrowed("csv");
-                o_d = ch;
+                o_d = *ch;
             } else {
                 output_ext = output
                     .extension()
@@ -56,10 +59,10 @@ fn main() -> CtxResult<(), Error> {
             }
 
             if let Some(ch) = input_delimiter {
-                let data = csv_decoder::csv_decoder(csv_reader::csv_reader(&input, ch))
+                let data = csv_decoder::csv_decoder(csv_reader::csv_reader(input, *ch))
                     .context("FATAL: Deserialization failed")?;
 
-                match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
             } else {
                 let input_ext: &str = &input
                     .extension()
@@ -69,26 +72,26 @@ fn main() -> CtxResult<(), Error> {
 
                 match input_ext {
                     "json" => {
-                        let data = json_decoder::json_decoder(json_reader::json_reader(&input))
+                        let data = json_decoder::json_decoder(json_reader::json_reader(input))
                             .context("FATAL: Deserialization failed")?;
 
-                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                        match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "toml" => {
-                        let data = toml_decoder::toml_decoder(toml_reader::toml_reader(&input))
+                        let data = toml_decoder::toml_decoder(toml_reader::toml_reader(input))
                             .context("FATAL: Deserialization failed")?;
-                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                        match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "csv" => {
-                        let data = csv_decoder::csv_decoder(csv_reader::csv_reader(&input, ','))
+                        let data = csv_decoder::csv_decoder(csv_reader::csv_reader(input, ','))
                             .context("FATAL: Deserialization failed")?;
-                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                        match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "ndjson" => {
                         let data =
-                            ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(&input))
+                            ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(input))
                                 .context("FATAL: Deserialization failed")?;
-                        match_output(data, output_file, &output_ext, parse_numbers, o_d)?;
+                        match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     _ => {
                         let repo_link = "https://github.com/Tahaa-Dev/fiox";
@@ -104,7 +107,7 @@ fn main() -> CtxResult<(), Error> {
             println!("Finished in {:?}", now.elapsed());
         }
 
-        Commands::Validate { input, verbose } => {
+        Commands::Validate { input } => {
             // Check if input exists
             if !Path::new(&input).exists() {
                 eprintln!("ERROR: Input file doesn't exist for validation.");
@@ -118,10 +121,10 @@ fn main() -> CtxResult<(), Error> {
                 .to_string_lossy();
 
             match input_ext {
-                "json" => json_validator::validate_json(&input, verbose)?,
-                "toml" => toml_validator::validate_toml(&input, verbose)?,
-                "csv" => csv_validator::validate_csv(&input, verbose)?,
-                "ndjson" => ndjson_validator::validate_ndjson(&input, verbose)?,
+                "json" => json_validator::validate_json(input)?,
+                "toml" => toml_validator::validate_toml(input)?,
+                "csv" => csv_validator::validate_csv(input)?,
+                "ndjson" => ndjson_validator::validate_ndjson(input)?,
                 _ => {
                     let repo_link = "https://github.com/Tahaa-Dev/fiox";
                     eprintln!(
