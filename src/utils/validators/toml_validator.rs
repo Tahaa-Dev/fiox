@@ -21,7 +21,7 @@ pub(crate) fn validate_toml(path: &PathBuf) -> CtxResult<(), std::io::Error> {
                 res = Err(resext::ErrCtx::new(
                     std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
-                        "Invalid JSON in input file",
+                        "Invalid TOML in input file",
                     ),
                     b"Input file is invalid".to_vec(),
                 ));

@@ -37,7 +37,7 @@ pub(crate) fn validate_csv(path: &PathBuf, delimiter: char) -> CtxResult<(), std
                     res = Err(resext::ErrCtx::new(
                         std::io::Error::new(
                             std::io::ErrorKind::InvalidData,
-                            "Invalid JSON in input file",
+                            "Invalid CSV in input file",
                         ),
                         b"Input file is invalid".to_vec(),
                     ));

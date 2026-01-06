@@ -41,8 +41,7 @@ pub(crate) fn csv_writer(
                     .map_err(|_| Error::other("Failed to write CSV record"))
                     .with_context(|| {
                         format!("FATAL: Failed to write CSV record at: {}", line_no + 1)
-                    })
-                    .context(crate::VERBOSE_HELP)?;
+                    })?;
             }
 
             // flush writer

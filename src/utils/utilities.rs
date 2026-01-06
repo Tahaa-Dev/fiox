@@ -97,23 +97,34 @@ pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Er
             .map_err(|_| Error::other("Failed to lock"))
             .context("FATAL: Failed to lock log file")?;
 
-        writeln!(wtr, "{}", err).context("FATAL: Failed to write error to log")?;
-
-        writeln!(wtr, "---").context("FATAL: Failed to write divider")?;
+        writeln!(
+            wtr,
+            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
+            err
+        )
+        .context("FATAL: Failed to write error to log")?;
     } else {
-        eprintln!("{}", err);
+        eprintln!(
+            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
+            err
+        );
     }
 
     Ok(())
 }
 
-pub(crate) fn flush_logger() -> CtxResult<(), Error> {
+pub(crate) fn flush_logger(msg: &str) -> CtxResult<(), Error> {
     if let Some(wtr) = &*LOGGER {
-        wtr.lock()
+        let mut wtr = wtr
+            .lock()
             .map_err(|_| Error::other("Failed to lock"))
-            .context("Failed to lock logger")?
-            .flush()
-            .context("Failed to flush logger")?;
+            .context("FATAL: Failed to lock logger")?;
+
+        wtr.write(msg.as_bytes()).context("FATAL: Failed to write status message")?;
+
+        wtr.flush().context("FATAL: Failed to flush logger")?;
+    } else {
+        eprintln!("{msg}");
     }
     Ok(())
 }

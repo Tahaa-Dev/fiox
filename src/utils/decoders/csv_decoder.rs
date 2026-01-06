@@ -26,7 +26,7 @@ pub(crate) fn csv_decoder(
             .with_context(|| format!("Invalid CSV data in input file at line: {}", line_no + 1));
 
         if record.is_err() {
-            Err(unsafe { record.unwrap_err_unchecked() }).context(crate::VERBOSE_HELP)
+            Err(unsafe { record.unwrap_err_unchecked() })
         } else {
             Ok(DataTypes::Csv(unsafe { record.unwrap_unchecked() }))
         }

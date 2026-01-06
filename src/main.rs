@@ -107,12 +107,12 @@ use std::process::exit;
 use std::sync::LazyLock;
 use utils::*;
 
-pub(crate) const VERBOSE_HELP: &str = "Try to use `fiox validate <INPUT>` for more information";
-
 pub(crate) static ARGS: LazyLock<FioxArgs> = LazyLock::new(FioxArgs::parse);
 
 fn main() -> CtxResult<(), Error> {
     let args = &*ARGS;
+
+    let status;
 
     match &args.cmd {
         Commands::Convert {
@@ -203,7 +203,7 @@ fn main() -> CtxResult<(), Error> {
                 };
             }
 
-            println!("Finished in {:?}", now.elapsed());
+            status = format!("Finished in {:?}", now.elapsed());
         }
 
         Commands::Validate { input, delimiter } => {
@@ -230,11 +230,11 @@ fn main() -> CtxResult<(), Error> {
 
             let input_ext: &str = &temp_ext;
 
-            match input_ext {
-                "json" => json_validator::validate_json(input)?,
-                "toml" => toml_validator::validate_toml(input)?,
-                "csv" => csv_validator::validate_csv(input, i_d)?,
-                "ndjson" => ndjson_validator::validate_ndjson(input)?,
+            let res = match input_ext {
+                "json" => json_validator::validate_json(input),
+                "toml" => toml_validator::validate_toml(input),
+                "csv" => csv_validator::validate_csv(input, i_d),
+                "ndjson" => ndjson_validator::validate_ndjson(input),
                 _ => {
                     let repo_link = "https://github.com/Tahaa-Dev/fiox";
                     eprintln!(
@@ -245,11 +245,15 @@ fn main() -> CtxResult<(), Error> {
                 }
             };
 
-            println!("Input file [{}] is valid!", input.to_str().unwrap_or("input"));
+            if res.is_err() {
+                status = unsafe { res.unwrap_err_unchecked().to_string() }
+            } else {
+                status = format!("Input file: {} is valid", &input.to_string_lossy());
+            }
         }
     }
 
-    flush_logger()?;
+    flush_logger(&status)?;
 
     Ok(())
 }

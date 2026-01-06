@@ -42,10 +42,7 @@ pub(crate) fn ndjson_decoder(
                         format!("Invalid NDJSON values in input file at line: {}", line_no)
                     });
                 if ndjson_obj.is_err() {
-                    return Some(
-                        Err(unsafe { ndjson_obj.unwrap_err_unchecked() })
-                            .context(crate::VERBOSE_HELP),
-                    );
+                    return Some(Err(unsafe { ndjson_obj.unwrap_err_unchecked() }));
                 } else {
                     return Some(Ok(DataTypes::Json(unsafe { ndjson_obj.unwrap_unchecked() })));
                 }

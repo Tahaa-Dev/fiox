@@ -40,7 +40,7 @@ pub(crate) fn validate_ndjson(path: &PathBuf) -> CtxResult<(), std::io::Error> {
                     res = Err(resext::ErrCtx::new(
                         std::io::Error::new(
                             std::io::ErrorKind::InvalidData,
-                            "Invalid JSON in input file",
+                            "Invalid NDJSON in input file",
                         ),
                         b"Input file is invalid".to_vec(),
                     ));

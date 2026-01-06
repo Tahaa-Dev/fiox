@@ -17,7 +17,7 @@ pub(crate) fn json_decoder(
             .context("Failed to deserialize file")
             .context("Invalid JSON data in input file");
         if obj.is_err() {
-            Err(unsafe { obj.unwrap_err_unchecked() }).context(crate::VERBOSE_HELP)
+            Err(unsafe { obj.unwrap_err_unchecked() })
         } else {
             Ok(DataTypes::Json(unsafe { obj.unwrap_unchecked() }))
         }
