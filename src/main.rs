@@ -112,8 +112,6 @@ pub(crate) static ARGS: LazyLock<FioxArgs> = LazyLock::new(FioxArgs::parse);
 fn main() -> CtxResult<(), Error> {
     let args = &*ARGS;
 
-    let status;
-
     match &args.cmd {
         Commands::Convert {
             input,
@@ -203,7 +201,9 @@ fn main() -> CtxResult<(), Error> {
                 };
             }
 
-            status = format!("Finished in {:?}", now.elapsed());
+            flush_logger(&format!("Finished in: {:?}", now.elapsed()))?;
+
+            Ok(())
         }
 
         Commands::Validate { input, delimiter } => {
@@ -245,17 +245,19 @@ fn main() -> CtxResult<(), Error> {
                 }
             };
 
-            if res.is_err() {
-                status = unsafe { res.unwrap_err_unchecked().to_string() }
-            } else {
-                status = format!("Input file: {} is valid", &input.to_string_lossy());
+            match res {
+                Ok(_) => {
+                    let msg = format!("Input file: {} is valid", input.display());
+                    flush_logger(&msg)?;
+                    Ok(())
+                }
+                Err(e) => {
+                    flush_logger(&e.to_string())?;
+                    exit(1);
+                }
             }
         }
     }
-
-    flush_logger(&status)?;
-
-    Ok(())
 }
 
 #[inline]
