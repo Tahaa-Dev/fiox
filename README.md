@@ -1,21 +1,24 @@
-## fiox
+# fiox
 
-The **fastest** multi-format file handling CLI tool, built in **Rust**.
-Supports **NDJSON**, **CSV**, **JSON**, **TOML**, **TSV**, and **PSV** formats.
+**The *fastest* multi-format file handling CLI tool, built in *Rust***
 
----
+- Supports **NDJSON**, **JSON**, **CSV**, **PSV**, **TSV**, **TOML** formats and more!
 
-### Features
-
-- Convert between NDJSON, CSV, JSON, TOML, TSV, PSV and more as I add them!
-- Validate files extremely quickly with optional detailed logs for debugging.
-- Ultra-fast thanks to being written in highly optimized Rust.
-- Extremely memory efficient for low resource environments thanks to streaming architecture and optimized allocations.
-- Intuitive and easy to use out of the box, built in 100% pure Rust which makes it easy to install and use.
+- Support for more formats will be added soon.
 
 ---
 
-### Installation
+## Features
+
+- Convert between NDJSON, JSON, TOML, CSV, TSV, PSV and more!
+- Validate files quickly with detailed logs for debugging
+- The fastest thanks to being written in highly optimized Rust
+- Highly memory efficient for low resource environments through streaming architecture and optimized allocations.
+- Intuitive and easy to use out of the box, built in 100% pure Rust which makes it easy to install.
+
+---
+
+## Installation
 
 Clone the repository and build:
 
@@ -33,7 +36,7 @@ mv ~/fiox/target/release/fiox ~/.local/bin/fiox
 
 ---
 
-### Usage
+## Usage
 
 ```bash
 # conversion
@@ -43,46 +46,46 @@ fiox convert <INPUT> -o <OUTPUT>
 fiox validate <INPUT>
 
 # options (flags)
-fiox validate <INPUT> --verbose
+fiox validate <INPUT> --log-file err.md
 fiox convert <INPUT> --output <OUTPUT> -a
 ```
 
 
 ---
 
-### Options (flags)
+## Options (flags)
 
-| **Option (flag)**       | **Functionality**                                                                                                                                                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `-v`, `--verbose`       | Enables extra debug logs in error messages.                                                                                                                                                                                                                                    |
-| `-a`, `--append`        | fiox overwrites existing data in files by default, this flag makes it append into the output file instead. **WARNING**: This flag can lead to unexpected output on some formats like JSON, but I will add some guardrails to it, it is unstable and can break as of right now. |
-| `-p`, `--parse-numbers` | This flag only affects CSV -> non-tabular format conversions only. It makes it so that fiox infers types and doesn't quote (stringify) numbers.                                                                                                                                |
-| `-o`, `--output`        | Not an option, but is a flag you use to indicate which file is the output file.                                                                                                                                                                                                |
+| **Option (flag)**                               | **Functionality**                                                                                                                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `-a`, `--append`                                | fiox overwrites existing data in files by default, this flag makes it append into the output file instead. **WARNING**: This flag can lead to unexpected output on some formats like JSON. |
+| `-p`, `--parse-numbers`                         | This flag only affects CSV -> non-tabular format conversions only. It makes it so that fiox infers types and doesn't quote (stringify) numbers.                                            |
+| `-o`, `--output`                                | Not an option, but is a flag you use to indicate which file is the output file.                                                                                                            |
+| `-l`, `--log-file`                              | Flag to log recoverable errors in a file (preferably Markdown) instead of printing to stderr                                                                                               |
+| `-i`, `--input-delimiter`, `--output-delimiter` | Flag to ignore extension and parse file / write output as CSV with the specified delimiter (e.g. PSV with '\|' as the delimiter)                                                           |
 
 ---
-
 ### Benchmarks
 
 **Notes:** 
 - All of these benchmarks were done using the same file but converted to other formats using fiox which is a 100k rows with 6 fields per row CSV file with 3 text columns, 2 number columns and a column of dates.
 - All of these benchmarks were done using **hyperfine** on entry level hardware. (Ryzen 3 3100, 8GB of DDR3 RAM and a SATA SSD).
 
-| **Benchmark**  | **fiox** | **Node.js** | **Miller / jq (C)**          |
-| -------------- | -------- | ----------- | ---------------------------- |
-| CSV to JSON    | ~112ms   | ~1.29s      | Miller: ~603ms               |
-| CSV to TOML    | ~121ms   | ~1.60s      | No native TOML support       |
-| JSON to TOML   | ~750ms   | ~7.2s       | No native TOML support       |
-| TOML to JSON   | ~772ms   | ~9s         | No native TOML support       |
-| CSV to NDJSON  | ~110ms   | ~1.2s       | Miller: ~2.85s              |
-| JSON to NDJSON | ~600ms   | ~6s         | jq: ~2.77s \| Miller: ~2.92s |
-| TOML to NDJSON | ~810ms   | ~8s         | No native TOML support       |
-| NDJSON to JSON | ~272ms   | ~6.2s       | jq: ~2.65s \| Miller: ~2.88s  |
-| NDJSON to TOML | ~300ms   | ~6.8s       | No native TOML support       |
+| **Benchmark** | **fiox** | **Node.js** | **Miller / jq (C)**          |
+| ------------- | -------- | ----------- | ---------------------------- |
+| CSV → JSON    | ~109ms   | ~1.29s      | Miller: ~603ms               |
+| CSV → TOML    | ~111ms   | ~1.6s       | No native TOML support       |
+| JSON → TOML   | ~1.1s    | ~8.7s       | No native TOML support       |
+| TOML → JSON   | ~862ms   | ~9s         | No native TOML support       |
+| CSV → NDJSON  | ~107ms   | ~1.2s       | Miller: ~2.85s               |
+| JSON → NDJSON | ~750ms   | ~6s         | jq: ~2.77s \| Miller: ~2.92s |
+| TOML → NDJSON | ~1.1s    | ~12s        | No native TOML support       |
+| NDJSON → JSON | ~310ms   | ~6.2s       | jq: ~2.65 \| Miller: ~2.88s  |
+| NDJSON → TOML | ~820ms   | ~10.8s      | No native TOML support       |
+As you can see from these benchmarks, ***fiox is much faster than most industry-standard file conversion tools***, fiox scales even better on better / server hardware! (using SSH)
 
-As you can see from these benchmarks, **fiox is much faster than industry-standard file conversion tools**, fiox scales even better on better / server hardware (using SSH)!
+**Note:** TOML conversions are generally slower than other formats since TOML is very limited when it comes to streaming and parsing is slower as it is more complicated than other formats.
 
 ---
-
 ### Plans
 
 - [x] Modularize readers and writers.
@@ -100,5 +103,6 @@ As you can see from these benchmarks, **fiox is much faster than industry-standa
 ### Notes
 
 - fiox is licensed under the **MIT** license.
-- For specifics about contributing to fiox, see **CONTRIBUTING.md**.
+- For specifics about contributing to fiox, see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
+- For changes, see <a href="CHANGELOG.md">CHANGELOG.md</a>
 - fiox is still unstable and in heavy development, it's recommended that you only use fiox after v0.5.0 release.

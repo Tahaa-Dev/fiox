@@ -34,7 +34,8 @@ pub fn validate_ndjson(path: &PathBuf) -> CtxResult<(), std::io::Error> {
         serde_json::from_slice::<IgnoredAny>(&buf)
             .with_context(|| format!("Invalid NDJSON values in input file at line: {}", idx))
             .unwrap_or_else(|e: resext::ErrCtx<serde_json::Error>| {
-                eprintln!("{e}");
+                crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                 if res.is_ok() {
                     res = Err(resext::ErrCtx::new(
                         std::io::Error::new(

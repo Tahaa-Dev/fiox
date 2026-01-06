@@ -23,7 +23,9 @@ pub fn ndjson_writer(
                 let json = serde_json::to_value(
                     item.context("Failed to re-serialize record for writing").unwrap_or_else(
                         |e: ErrCtx<Error>| {
-                            eprintln!("{e}");
+                            crate::utils::log_err(&e)
+                                .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                             DataTypes::Json(serde_json::json!({}))
                         },
                     ),
@@ -31,7 +33,8 @@ pub fn ndjson_writer(
                 .context("Failed to re-serialize record")
                 .context("Invalid NDJSON values in input file")
                 .unwrap_or_else(|e: ErrCtx<serde_json::Error>| {
-                    eprintln!("{e}");
+                    crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                     serde_json::json!({})
                 });
 
@@ -96,7 +99,8 @@ pub fn ndjson_writer(
                 let record = into_byte_record(rec)
                     .context("Failed to re-serialize object for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         csv::ByteRecord::with_capacity(0, 0)
                     });
 
@@ -155,7 +159,8 @@ pub fn ndjson_writer(
                 let json = item
                     .context("Failed to re-serialize record for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         DataTypes::Json(serde_json::json!({}))
                     });
 

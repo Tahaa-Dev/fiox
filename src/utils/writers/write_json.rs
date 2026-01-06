@@ -18,7 +18,8 @@ pub fn write_json(
                 let valid_obj = obj
                     .context("Failed to re-serialize object for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         DataTypes::Json(serde_json::json!({}))
                     });
 
@@ -76,7 +77,8 @@ pub fn write_json(
                 let record = into_byte_record(rec)
                     .context("Failed to re-serialize object for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         csv::ByteRecord::with_capacity(0, 0)
                     });
 
@@ -154,7 +156,8 @@ pub fn write_json(
 
                 let obj = obj.context("Failed to re-serialize object for writing").unwrap_or_else(
                     |e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         DataTypes::Json(serde_json::json!({}))
                     },
                 );

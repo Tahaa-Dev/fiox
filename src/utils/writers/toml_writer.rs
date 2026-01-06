@@ -19,7 +19,8 @@ pub fn toml_writer(
                 let obj = Value::try_from(
                     item.context("Failed to re-serialize object for writing").unwrap_or_else(
                         |e: ErrCtx<Error>| {
-                            eprintln!("{e}");
+                            crate::utils::log_err(&e)
+                                .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                             DataTypes::Toml(Value::Table(Map::new()))
                         },
                     ),
@@ -27,7 +28,8 @@ pub fn toml_writer(
                 .context("Failed to re-serialize object for writing")
                 .context("Invalid TOML values in input file")
                 .unwrap_or_else(|e: ErrCtx<toml::ser::Error>| {
-                    eprintln!("{e}");
+                    crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                     Value::Table(Map::new())
                 });
 
@@ -97,7 +99,9 @@ pub fn toml_writer(
                 let record = into_byte_record(rec)
                     .context("Failed to re-serialize object for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                         csv::ByteRecord::with_capacity(0, 0)
                     });
 
@@ -161,7 +165,9 @@ pub fn toml_writer(
                 let obj = Value::try_from(
                     rec.context("Failed to re-serialize object for writing").unwrap_or_else(
                         |e: ErrCtx<Error>| {
-                            eprintln!("{e}");
+                            crate::utils::log_err(&e)
+                                .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                             DataTypes::Toml(Value::Table(Map::new()))
                         },
                     ),
@@ -169,7 +175,8 @@ pub fn toml_writer(
                 .context("Failed to re-serialize object for writing")
                 .context("Invalid TOML values in input file")
                 .unwrap_or_else(|e: ErrCtx<toml::ser::Error>| {
-                    eprintln!("{e}");
+                    crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                     Value::Table(Map::new())
                 });
 

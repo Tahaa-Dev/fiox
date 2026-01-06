@@ -31,8 +31,7 @@ pub struct FioxArgs {
     pub cmd: Commands,
 
     /// Argument for setting a Markdown (MD) file to export error logs to.
-    /// Will panic and abort if file doesn't have the extension `.md`.
-    #[arg(short, long, value_hint = FilePath)]
+    #[arg(short, long, value_hint = FilePath, global = true)]
     pub log_file: Option<PathBuf>,
 }
 

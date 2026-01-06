@@ -1,8 +1,27 @@
-use std::io::Error;
+use std::{
+    fs::{File, OpenOptions},
+    io::{BufWriter, Error, Write},
+    sync::{LazyLock, Mutex},
+};
 
 use csv::ByteRecord;
-use resext::{CtxResult, ResExt};
+use resext::{CtxResult, ErrCtx, ResExt};
 use serde::Serialize;
+
+static LOGGER: LazyLock<Option<Mutex<BufWriter<File>>>> = LazyLock::new(|| {
+    let args = &*crate::ARGS;
+
+    args.log_file.as_ref().map(|path| {
+        let file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(path)
+            .better_expect("FATAL: Failed to open error logging file", 1, true);
+
+        Mutex::new(BufWriter::with_capacity(256, file))
+    })
+});
 
 pub enum WriterStreams<I>
 where
@@ -69,4 +88,32 @@ pub fn escape(byte: u8, output: &mut Vec<u8>) {
     } else {
         output.push(byte);
     }
+}
+
+pub fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Error> {
+    if let Some(wtr) = &*LOGGER {
+        let mut wtr = wtr
+            .lock()
+            .map_err(|_| Error::other("Failed to lock"))
+            .context("FATAL: Failed to lock log file")?;
+
+        writeln!(wtr, "{}", err).context("FATAL: Failed to write error to log")?;
+
+        writeln!(wtr, "---").context("FATAL: Failed to write divider")?;
+    } else {
+        eprintln!("{}", err);
+    }
+
+    Ok(())
+}
+
+pub fn flush_logger() -> CtxResult<(), Error> {
+    if let Some(wtr) = &*LOGGER {
+        wtr.lock()
+            .map_err(|_| Error::other("Failed to lock"))
+            .context("Failed to lock logger")?
+            .flush()
+            .context("Failed to flush logger")?;
+    }
+    Ok(())
 }

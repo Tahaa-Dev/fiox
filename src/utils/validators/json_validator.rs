@@ -19,7 +19,8 @@ pub fn validate_json(path: &PathBuf) -> CtxResult<(), std::io::Error> {
             format!("Invalid JSON data in input file: {}", &path.to_string_lossy())
         })
         .unwrap_or_else(|e: resext::ErrCtx<serde_json::Error>| {
-            eprintln!("{e}");
+            crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
             if res.is_ok() {
                 res = Err(resext::ErrCtx::new(
                     std::io::Error::new(

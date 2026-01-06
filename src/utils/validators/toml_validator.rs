@@ -15,7 +15,8 @@ pub fn validate_toml(path: &PathBuf) -> CtxResult<(), std::io::Error> {
     toml::from_slice::<serde::de::IgnoredAny>(&file_bytes)
         .with_context(|| format!("Invalid TOML values in input file: {}", &path.to_string_lossy()))
         .unwrap_or_else(|e: resext::ErrCtx<toml::de::Error>| {
-            eprintln!("{e}");
+            crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
             if res.is_ok() {
                 res = Err(resext::ErrCtx::new(
                     std::io::Error::new(

@@ -8,7 +8,7 @@ use std::process::exit;
 use std::sync::LazyLock;
 use utils::*;
 
-pub const VERBOSE_HELP: &str = "Try to use `fiox validate <INPUT> -v` for more information";
+pub const VERBOSE_HELP: &str = "Try to use `fiox validate <INPUT>` for more information";
 
 pub static ARGS: LazyLock<FioxArgs> = LazyLock::new(FioxArgs::parse);
 
@@ -137,6 +137,8 @@ fn main() -> CtxResult<(), Error> {
             println!("Input file [{}] is valid!", input.to_str().unwrap_or("inputFile"));
         }
     }
+
+    flush_logger()?;
 
     Ok(())
 }

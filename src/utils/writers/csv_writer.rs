@@ -33,7 +33,8 @@ pub fn csv_writer(
                 let b = into_byte_record(line)
                     .context("Failed to re-serialize object for writing")
                     .unwrap_or_else(|e: ErrCtx<Error>| {
-                        eprintln!("{e}");
+                        crate::utils::log_err(&e)
+                            .unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
                         csv::ByteRecord::from(vec![b""; headers.len()])
                     });
                 wtr.write_record(&b)

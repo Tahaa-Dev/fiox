@@ -23,7 +23,8 @@ pub fn validate_csv(path: &PathBuf) -> CtxResult<(), std::io::Error> {
     for (idx, rec) in reader.byte_records().enumerate() {
         rec.with_context(|| format!("Invalid CSV data at record: {}", idx + 1)).unwrap_or_else(
             |e: resext::ErrCtx<csv::Error>| {
-                eprintln!("{e}");
+                crate::utils::log_err(&e).unwrap_or_else(|err| eprintln!("{}\n{}", err, &e));
+
                 if res.is_ok() {
                     res = Err(resext::ErrCtx::new(
                         std::io::Error::new(
