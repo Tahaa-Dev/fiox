@@ -1,27 +1,8 @@
-use std::{
-    fs::{File, OpenOptions},
-    io::{BufWriter, Error, Write},
-    sync::{LazyLock, Mutex},
-};
+use std::io::Error;
 
 use csv::ByteRecord;
-use resext::{CtxResult, ErrCtx, ResExt};
+use resext::{CtxResult, ResExt};
 use serde::Serialize;
-
-static LOGGER: LazyLock<Option<Mutex<BufWriter<File>>>> = LazyLock::new(|| {
-    let args = &*crate::ARGS;
-
-    args.log_file.as_ref().map(|path| {
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(path)
-            .better_expect("FATAL: Failed to open error logging file", 1, true);
-
-        Mutex::new(BufWriter::with_capacity(256, file))
-    })
-});
 
 pub(crate) enum WriterStreams<I>
 where
@@ -90,41 +71,69 @@ pub(crate) fn escape(byte: u8, output: &mut Vec<u8>) {
     }
 }
 
-pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Error> {
-    if let Some(wtr) = &*LOGGER {
-        let mut wtr = wtr
-            .lock()
-            .map_err(|_| Error::other("Failed to lock"))
-            .context("FATAL: Failed to lock log file")?;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        writeln!(
-            wtr,
-            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
-            err
-        )
-        .context("FATAL: Failed to write error to log")?;
-    } else {
-        eprintln!(
-            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
-            err
-        );
+    #[test]
+    fn test_escape_quote() {
+        let mut out = Vec::new();
+        escape(b'"', &mut out);
+        assert_eq!(out, b"\\\"");
     }
 
-    Ok(())
-}
-
-pub(crate) fn flush_logger(msg: &str) -> CtxResult<(), Error> {
-    if let Some(wtr) = &*LOGGER {
-        let mut wtr = wtr
-            .lock()
-            .map_err(|_| Error::other("Failed to lock"))
-            .context("FATAL: Failed to lock logger")?;
-
-        wtr.write(msg.as_bytes()).context("FATAL: Failed to write status message")?;
-
-        wtr.flush().context("FATAL: Failed to flush logger")?;
-    } else {
-        eprintln!("{msg}");
+    #[test]
+    fn test_escape_newline() {
+        let mut out = Vec::new();
+        escape(b'\n', &mut out);
+        assert_eq!(out, b"\\n");
     }
-    Ok(())
+
+    #[test]
+    fn test_escape_backslash() {
+        let mut out = Vec::new();
+        escape(b'\\', &mut out);
+        assert_eq!(out, b"\\\\");
+    }
+
+    #[test]
+    fn test_escape_tab() {
+        let mut out = Vec::new();
+        escape(b'\t', &mut out);
+        assert_eq!(out, b"\\t");
+    }
+
+    #[test]
+    fn test_escape_carriage_return() {
+        let mut out = Vec::new();
+        escape(b'\r', &mut out);
+        assert_eq!(out, b"\\r");
+    }
+
+    #[test]
+    fn test_no_escape_needed() {
+        let mut out = Vec::new();
+        escape(b'a', &mut out);
+        assert_eq!(out, b"a");
+
+        out.clear();
+        escape(b'0', &mut out);
+        assert_eq!(out, b"0");
+    }
+
+    #[test]
+    fn test_needs_escape_table() {
+        // Should escape these
+        assert!(NEEDS_ESCAPE[b'"' as usize]);
+        assert!(NEEDS_ESCAPE[b'\n' as usize]);
+        assert!(NEEDS_ESCAPE[b'\r' as usize]);
+        assert!(NEEDS_ESCAPE[b'\t' as usize]);
+        assert!(NEEDS_ESCAPE[b'\\' as usize]);
+
+        // Should NOT escape these
+        assert!(!NEEDS_ESCAPE[b'a' as usize]);
+        assert!(!NEEDS_ESCAPE[b'0' as usize]);
+        assert!(!NEEDS_ESCAPE[b' ' as usize]);
+        assert!(!NEEDS_ESCAPE[b',' as usize]);
+    }
 }
