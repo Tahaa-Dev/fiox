@@ -259,3 +259,34 @@ tempfile = "3.24.0"
 
     Ok(())
 }
+
+#[test]
+fn test_ndjson_to_toml() -> resext::CtxResult<(), Error> {
+    let input =
+        Builder::new().suffix(".ndjson").tempfile().context("Failed to crate input TempFile")?;
+
+    let output =
+        Builder::new().suffix(".toml").tempfile().context("Failed to create output TempFile")?;
+
+    fs::write(
+        input.path(),
+        r#"
+{"a": 1, "b": 2, "c": {"arr": [1, 2, 3], "sum": 6}}
+{"nums": [1, 2, 3, 4, 5], "squares": [1, 4, 9, 16, 25]}
+{"nums and squares": [{"1": 1}, {"2": 4}, {"3": 9}, {"4": 16}, {"5": 25}]}
+    "#,
+    )
+    .context("Failed to write input TempFile contents")?;
+
+    Command::new(cargo::cargo_bin!("fiux"))
+        .arg("convert")
+        .arg(input.path())
+        .arg("-o")
+        .arg(output.path())
+        .assert()
+        .success();
+
+    fs::read_to_string(output.path()).context("Failed to read output file")?;
+
+    Ok(())
+}
