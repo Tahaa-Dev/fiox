@@ -1,4 +1,4 @@
-# Contributing to fiox
+# Contributing to fiux
 
 Thanks for your interest in contributing!
 

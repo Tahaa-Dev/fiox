@@ -14,8 +14,8 @@ fn test_csv_to_json_conversion() -> CtxResult<(), Error> {
     fs::write(input.path(), "name,age,city\nAlice,30,NYC\nBob,25,LA\n")
         .context("Failed to write input TempFile contents")?;
 
-    // Run fiox convert
-    Command::new(cargo::cargo_bin!("fiox"))
+    // Run fiux convert
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("convert")
         .arg(input.path())
         .arg("-o")
@@ -43,7 +43,7 @@ fn test_tsv_to_json_with_delimiter() -> CtxResult<(), Error> {
     fs::write(input.path(), "name\tage\tcity\nAlice\t30\tNYC\nBob\t25\tLA\n")
         .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("convert")
         .arg(input.path())
         .arg("--input-delimiter")
@@ -72,7 +72,7 @@ fn test_error_logging_to_file() -> CtxResult<(), Error> {
     fs::write(input.path(), "a,b,c\n1,2,3\ninvalid\n4,5,6\n")
         .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("--log-file")
         .arg(log.path())
         .arg("convert")
@@ -113,7 +113,7 @@ fn test_validation_pass() -> CtxResult<(), Error> {
     // Write valid JSON
     fs::write(input.path(), valid_json).context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox")).arg("validate").arg(input.path()).assert().success();
+    Command::new(cargo::cargo_bin!("fiux")).arg("validate").arg(input.path()).assert().success();
 
     Ok(())
 }
@@ -127,7 +127,7 @@ fn test_validation_fail() -> CtxResult<(), Error> {
     fs::write(input.path(), "a,b,c\n1,2,3\ninvalid\n")
         .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox")).arg("validate").arg(input.path()).assert().failure(); // Should exit with code 1
+    Command::new(cargo::cargo_bin!("fiux")).arg("validate").arg(input.path()).assert().failure(); // Should exit with code 1
 
     Ok(())
 }
@@ -140,7 +140,7 @@ fn test_validation_with_delimiter() -> CtxResult<(), Error> {
     // Write PSV (pipe-separated)
     fs::write(input.path(), "a|b|c\n1|2|3\n").context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("validate")
         .arg(input.path())
         .arg("--delimiter")
@@ -167,7 +167,7 @@ fn test_ndjson_to_json() -> CtxResult<(), Error> {
     )
     .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("convert")
         .arg(input.path())
         .arg("-o")
@@ -192,7 +192,7 @@ fn test_parse_numbers_flag() -> CtxResult<(), Error> {
     fs::write(input.path(), "a,b\n1,2\n3,4\n")
         .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("convert")
         .arg(input.path())
         .arg("-o")
@@ -219,7 +219,7 @@ fn test_toml_to_json() -> CtxResult<(), Error> {
         input.path(),
         r#"
 [package]
-name = "fiox"
+name = "fiux"
 version = "0.4.0"
 edition = "2024"
 authors = ["Taha Mahmoud <tahamahmoud7097@gmail.com>"]
@@ -227,7 +227,7 @@ categories = ["filesystem", "parsing", "command-line-utilities"]
 description = "The fastest multi-format file converter CLI tool"
 keywords = ["filesystem", "file-conversion", "file-handling", "cli"]
 license = "MIT"
-repository = "https://github.com/Tahaa-Dev/fiox"
+repository = "https://github.com/Tahaa-Dev/fiux"
 readme = "README.md"
 
 [dependencies]
@@ -246,7 +246,7 @@ tempfile = "3.24.0"
     )
     .context("Failed to write input TempFile contents")?;
 
-    Command::new(cargo::cargo_bin!("fiox"))
+    Command::new(cargo::cargo_bin!("fiux"))
         .arg("convert")
         .arg(input.path())
         .arg("-o")
@@ -255,7 +255,7 @@ tempfile = "3.24.0"
         .success();
 
     let result = fs::read_to_string(output.path()).context("Failed to read output file")?;
-    assert!(result.contains(r#""name": "fiox""#) || result.contains(r#""name":"fiox""#));
+    assert!(result.contains(r#""name": "fiux""#) || result.contains(r#""name":"fiux""#));
 
     Ok(())
 }

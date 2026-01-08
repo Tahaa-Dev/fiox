@@ -1,7 +1,7 @@
 /*!
-**fiox: The *fastest* multi-format file converter CLI tool**
+**fiux: The *fastest* multi-format file converter CLI tool**
 
-fiox provides intuitive file conversion similar to `mlr`'s `cat` verb but with a few advantages over it:
+fiux provides intuitive file conversion similar to `mlr`'s `cat` verb but with a few advantages over it:
 
 1. Auto format detection through extension
 2. Better error-handling with recoverable errors, logging options, comprehensive logs and a `validate` command for debugging
@@ -16,14 +16,14 @@ fiox provides intuitive file conversion similar to `mlr`'s `cat` verb but with a
 ##### Description
 
 - Convert from input file to output file
-- If any item in the input file is invalid, the item is skipped and fiox logs an error message
+- If any item in the input file is invalid, the item is skipped and fiux logs an error message
 - Only panics on read / write failure
 ##### Usage
 
 Basic usage:
 
 ```sh
-fiox convert <INPUT> -o <OUTPUT>
+fiux convert <INPUT> -o <OUTPUT>
 ```
 
 ##### Arguments
@@ -33,9 +33,9 @@ fiox convert <INPUT> -o <OUTPUT>
 
 ##### Flags (options)
 
-1. `--append` / `-a`: fiox overwrites existing data in the output file by default, this flag makes it append to it instead. **WARNING:** This flag can lead to corrupted output with some formats like JSON.
-2. `--parse-numbers` / `-p`: Flag to make fiox parse numbers in output when converted from CSV.
-3. `--input-delimiter` / `--output-delimiter`: Flags that make fiox ignore file extension and treat them as CSV with the specified delimiter
+1. `--append` / `-a`: fiux overwrites existing data in the output file by default, this flag makes it append to it instead. **WARNING:** This flag can lead to corrupted output with some formats like JSON.
+2. `--parse-numbers` / `-p`: Flag to make fiux parse numbers in output when converted from CSV.
+3. `--input-delimiter` / `--output-delimiter`: Flags that make fiux ignore file extension and treat them as CSV with the specified delimiter
 
 ---
 
@@ -51,7 +51,7 @@ fiox convert <INPUT> -o <OUTPUT>
 Basic usage:
 
 ```sh
-fiox validate <INPUT>
+fiux validate <INPUT>
 ```
 
 ##### Arguments
@@ -60,7 +60,7 @@ Input: File to be validated, will panic if it doesn't exist
 
 ##### Flags (options)
 
-`--delimiter` / `-d`: Flag that makes fiox ignore file extension and treat the file as a CSV with the specified delimiter
+`--delimiter` / `-d`: Flag that makes fiux ignore file extension and treat the file as a CSV with the specified delimiter
 
 ### 3. `--log-file` / `-l` global flag
 
@@ -69,7 +69,7 @@ Flag for specifying a file to write logs to instead of printing them to stderr, 
 ##### Usage
 
 ```sh
-fiox validate <BROKEN_FILE> -l err.md
+fiux validate <BROKEN_FILE> -l err.md
 ```
 
 ---
@@ -78,22 +78,22 @@ fiox validate <BROKEN_FILE> -l err.md
 
 ```sh
 # Convert with input delimiter
-fiox convert input.psv --input-delimiter '|' -o output.csv
+fiux convert input.psv --input-delimiter '|' -o output.csv
 
 # Convert with output delimiter
-fiox convert input.csv -o output.ssv --output-delimiter ';'
+fiux convert input.csv -o output.ssv --output-delimiter ';'
 
 # Convert with append and parse numbers in output
-fiox convert input.csv -o output.ndjson -a -p
+fiux convert input.csv -o output.ndjson -a -p
 
 # Convert with log file
-fiox convert broken.ndjson -o output.toml -l err.md
+fiux convert broken.ndjson -o output.toml -l err.md
 
 # Validate with log file
-fiox validate broken.json -l err.md
+fiux validate broken.json -l err.md
 
 # Validate with delimiter
-fiox validate input.psv -d '|'
+fiux validate input.psv -d '|'
 ```
 */
 
@@ -191,7 +191,7 @@ fn main() -> CtxResult<(), Error> {
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     _ => {
-                        let repo_link = "https://github.com/Tahaa-Dev/fiox";
+                        let repo_link = "https://github.com/Tahaa-Dev/fiux";
                         eprintln!(
                             "FATAL: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
                             input_ext, repo_link,
@@ -236,7 +236,7 @@ fn main() -> CtxResult<(), Error> {
                 "csv" => csv_validator::validate_csv(input, i_d),
                 "ndjson" => ndjson_validator::validate_ndjson(input),
                 _ => {
-                    let repo_link = "https://github.com/Tahaa-Dev/fiox";
+                    let repo_link = "https://github.com/Tahaa-Dev/fiux";
                     eprintln!(
                         "ERROR: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
                         input_ext, repo_link,
@@ -279,7 +279,7 @@ fn match_output(
         "ndjson" => ndjson_writer::ndjson_writer(data, output_file, parse_numbers)
             .context("FATAL: Serialization failed")?,
         _ => {
-            let repo_link = "https://github.com/Tahaa-Dev/fiox";
+            let repo_link = "https://github.com/Tahaa-Dev/fiux";
             eprintln!(
                 "FATAL: Output extension \"{}\" is not supported currently.\n Open an issue at {}",
                 output_ext, repo_link,

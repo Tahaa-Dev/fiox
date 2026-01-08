@@ -1,6 +1,6 @@
-# fiox
+# fiux
 
-[![CI](https://github.com/Tahaa-Dev/fiox/workflows/CI/badge.svg)](https://github.com/Tahaa-Dev/fiox/actions)
+[![CI](https://github.com/Tahaa-Dev/fiux/workflows/CI/badge.svg)](https://github.com/Tahaa-Dev/fiux/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **The *fastest* multi-format file converter CLI tool.**
@@ -24,12 +24,12 @@
 ## Installation
 
 ```sh
-cargo install fiox
+cargo install fiux
 ```
 ```
 ```
 
-- And that's it! You've installed fiox!
+- And that's it! You've installed fiux!
 
 ---
 
@@ -37,14 +37,14 @@ cargo install fiox
 
 ```bash
 # conversion
-fiox convert <INPUT> -o <OUTPUT>
+fiux convert <INPUT> -o <OUTPUT>
 
 # validation
-fiox validate <INPUT>
+fiux validate <INPUT>
 
 # options (flags)
-fiox validate <INPUT> --log-file err.md
-fiox convert <INPUT> --output <OUTPUT> -a
+fiux validate <INPUT> --log-file err.md
+fiux convert <INPUT> --output <OUTPUT> -a
 ```
 
 
@@ -54,7 +54,7 @@ fiox convert <INPUT> --output <OUTPUT> -a
 
 Benchmarks were done with a 100k line CSV converted to other formats for consistency across benchmarks
 
-| **Benchmark** | **fiox** | **Node.js** | **Miller / jq (C)**          |
+| **Benchmark** | **fiux** | **Node.js** | **Miller / jq (C)**          |
 | ------------- | -------- | ----------- | ---------------------------- |
 | CSV → JSON    | ~109ms   | ~1.29s      | Miller: ~603ms               |
 | CSV → TOML    | ~111ms   | ~1.6s       | No native TOML support       |
@@ -66,7 +66,7 @@ Benchmarks were done with a 100k line CSV converted to other formats for consist
 | NDJSON → JSON | ~310ms   | ~6.2s       | jq: ~2.65 \| Miller: ~2.88s  |
 | NDJSON → TOML | ~820ms   | ~10.8s      | No native TOML support       |
 
-As you can see from these benchmarks, ***fiox is much faster than most industry-standard file conversion tools***, fiox scales even better on better / server hardware! (using SSH)
+As you can see from these benchmarks, ***fiux is much faster than most industry-standard file conversion tools***, fiux scales even better on better / server hardware! (using SSH)
 
 **Note:** TOML conversions are generally slower than other formats since TOML is very limited when it comes to streaming and parsing is slower as it is more complicated than other formats.
 
@@ -88,6 +88,6 @@ As you can see from these benchmarks, ***fiox is much faster than most industry-
 
 ### Notes
 
-- fiox is licensed under the **MIT** license.
-- For specifics about contributing to fiox, see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
+- fiux is licensed under the **MIT** license.
+- For specifics about contributing to fiux, see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
 - For changes, see <a href="CHANGELOG.md">CHANGELOG.md</a>.

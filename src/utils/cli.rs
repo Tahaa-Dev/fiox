@@ -3,21 +3,21 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueHint::FilePath};
 
 static LONG_ABT: &str = r#"
-fiox: The fastest streaming-first file conveter.
+fiux: The fastest streaming-first file conveter.
 
   • Supports JSON, NDJSON, TOML, CSV, TSV, PSV and more!
 
   • Formats are detected automatically based on file extension, except for custom 
     delimter CSV formats (e.g. TSV, PSV, etc.), which are detected with `--input-delimiter <DELIMITER>` and `--output-delimiter <DELIMITER>`.
 
-  • if there are any bugs or any features you want, open an issue at: `https://github.com/Tahaa-Dev/fiox`.
+  • if there are any bugs or any features you want, open an issue at: `https://github.com/Tahaa-Dev/fiux`.
 
 
 ╭────────────────·Examples·────────────────╮
 │                                      ••• │
-│ fiox convert data.json out.csv           │
-│ fiox validate broken.ndjson --verbose    │
-│ fiox convert big.csv big.json --verbose  │
+│ fiux convert data.json out.csv           │
+│ fiux validate broken.ndjson --verbose    │
+│ fiux convert big.csv big.json --verbose  │
 │                                          │
 ╰──────────────────────────────────────────╯
 "#;
@@ -38,7 +38,7 @@ pub struct FioxArgs {
     pub(crate) log_file: Option<PathBuf>,
 }
 
-/// fiox subcommands
+/// fiux subcommands
 #[derive(Subcommand)]
 pub enum Commands {
     /// Convert command that takes two positional arguments for input and output, takes one
@@ -61,13 +61,13 @@ pub enum Commands {
         parse_numbers: bool,
 
         /// Argument for specifying delimiters for CSV / CSV-like input formats (e.g. TSV, PSV, etc.).
-        /// This flag makes fiox ignore the extension and instead treat the file as a CSV
+        /// This flag makes fiux ignore the extension and instead treat the file as a CSV
         /// with the specified delimiter instead of commas.
         #[arg(long)]
         input_delimiter: Option<char>,
 
         /// Argument for specifying delimiters for CSV / CSV-like output formats (e.g. TSV, PSV, etc.).
-        /// This flag makes fiox ignore the extension and instead treat the file as a CSV
+        /// This flag makes fiux ignore the extension and instead treat the file as a CSV
         /// with the specified delimiter instead of commas.
         #[arg(long)]
         output_delimiter: Option<char>,
@@ -80,7 +80,7 @@ pub enum Commands {
         input: PathBuf,
 
         /// Argument for specifying delimiters for CSV / CSV-like input formats (e.g. TSV, PSV, etc.).
-        /// This flag makes fiox ignore the extension and instead treat the file as a CSV
+        /// This flag makes fiux ignore the extension and instead treat the file as a CSV
         /// with the specified delimiter instead of commas.
         #[arg(short, long)]
         delimiter: Option<char>,

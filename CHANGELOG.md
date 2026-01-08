@@ -36,16 +36,16 @@
 
 #### 1. `--input-delimiter` / `--output-delimiter` flag
 
-- Flags that make fiox ignore extension completely and treat the file as a CSV with the specified delimiter (e.g. PSV with `--input-delimiter '|'`)
+- Flags that make fiux ignore extension completely and treat the file as a CSV with the specified delimiter (e.g. PSV with `--input-delimiter '|'`)
 
 **Example:**
 
 ```sh
 # Input
-fiox convert input.psv --input-delimiter '|' -o output.json
+fiux convert input.psv --input-delimiter '|' -o output.json
 
 # Output
-fiox convert input.csv -o output.ssv --output-delimiter ';'
+fiux convert input.csv -o output.ssv --output-delimiter ';'
 ```
 
 ---
@@ -58,17 +58,17 @@ fiox convert input.csv -o output.ssv --output-delimiter ';'
 
 ```sh
 # long flag
-fiox convert input.ndjson -o output.toml --log-file err.md
+fiux convert input.ndjson -o output.toml --log-file err.md
 
 # short flag
-fiox validate input.csv -l csv_err.md
+fiux validate input.csv -l csv_err.md
 ```
 
 ---
 
 #### 3. Global arg parsing
 
- This is a change mainly for architecture, it won't affect fiox usage but will make development easier and will be more integrated into functions in the next version, for now it's just laying down the groundwork for less argument drilling in functions which will help in adding more flags in the future.
+ This is a change mainly for architecture, it won't affect fiux usage but will make development easier and will be more integrated into functions in the next version, for now it's just laying down the groundwork for less argument drilling in functions which will help in adding more flags in the future.
  
 ---
 

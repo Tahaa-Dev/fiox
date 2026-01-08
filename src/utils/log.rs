@@ -31,13 +31,13 @@ pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Er
 
         writeln!(
             wtr,
-            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
+            "{}\nHint: Try to use `fiux validate <INPUT>` for more information\n\n---\n",
             err
         )
         .context("FATAL: Failed to write error to log")?;
     } else {
         eprintln!(
-            "{}\nHint: Try to use `fiox validate <INPUT>` for more information\n\n---\n",
+            "{}\nHint: Try to use `fiux validate <INPUT>` for more information\n\n---\n",
             err
         );
     }
