@@ -4,6 +4,7 @@ use std::{
     sync::{LazyLock, Mutex},
 };
 
+use owo_colors::OwoColorize;
 use resext::{CtxResult, ErrCtx, ResExt};
 
 static LOGGER: LazyLock<Option<Mutex<BufWriter<File>>>> = LazyLock::new(|| {
@@ -37,8 +38,8 @@ pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Er
         .context("FATAL: Failed to write error to log")?;
     } else {
         eprintln!(
-            "{}\nHint: Try to use `fiux validate <INPUT>` for more information\n\n---\n",
-            err
+            "{}\n{} Try to use {} for more information\n\n{}\n",
+            err, "Hint:".bright_green(), "`fiux validate <INPUT>`".yellow(), "---".red()
         );
     }
 

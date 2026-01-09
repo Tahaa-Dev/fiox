@@ -99,6 +99,7 @@ fiux validate input.psv -d '|'
 
 mod utils;
 use clap::Parser;
+use owo_colors::OwoColorize;
 use resext::*;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind as EK};
@@ -124,9 +125,10 @@ fn main() -> CtxResult<(), Error> {
             // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
-                || format!(
-                    "Error: Input file {} doesn't exist",
-                    input.to_str().unwrap_or("input_file")
+                || format!("{} {} {}",
+                    "FATAL: Input file".red().bold(),
+                    input.to_str().unwrap_or("input_file").on_bright_red(),
+                    "doesn't exist".red().bold()
                 ),
                 1
             );
@@ -136,7 +138,7 @@ fn main() -> CtxResult<(), Error> {
                 .write(true)
                 .append(*append)
                 .open(output)
-                .context("Failed to open output file.")?;
+                .context("FATAL: Failed to open output file")?;
 
             let o_d: char;
 
@@ -191,27 +193,28 @@ fn main() -> CtxResult<(), Error> {
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     _ => {
-                        let repo_link = "https://github.com/Tahaa-Dev/fiux";
-                        eprintln!(
-                            "FATAL: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
-                            input_ext, repo_link,
-                        );
-                        exit(1);
+                        log_invalid_ext(input_ext, false);
                     }
                 };
             }
 
-            flush_logger(&format!("Finished in: {:?}", now.elapsed()))?;
+            flush_logger(&format!("Finished in: {:?}", now.elapsed().bright_green()))?;
 
             Ok(())
         }
 
         Commands::Validate { input, delimiter } => {
             // Check if input exists
-            if !Path::new(&input).exists() {
-                eprintln!("ERROR: Input file doesn't exist for validation.");
-                exit(1);
-            }
+            throw_err_if!(
+                !Path::new(&input).exists(),
+                || format!("{} {} {}",
+                    "FATAL: Input file".red().bold(),
+                    input.to_str().unwrap_or("input_file").on_bright_red(),
+                    "doesn't exist".red().bold()
+                ),
+                1
+            );
+
 
             let i_d: char;
 
@@ -236,23 +239,22 @@ fn main() -> CtxResult<(), Error> {
                 "csv" => csv_validator::validate_csv(input, i_d),
                 "ndjson" => ndjson_validator::validate_ndjson(input),
                 _ => {
-                    let repo_link = "https://github.com/Tahaa-Dev/fiux";
-                    eprintln!(
-                        "ERROR: Input extension \"{}\" is not supported currently.\n Open an issue at {}",
-                        input_ext, repo_link,
-                    );
-                    exit(1);
+                    log_invalid_ext(input_ext, false);
+
+                    // Use `Ok(())` since error won't be returned as `log_invalid_ext()` always
+                    // exits
+                    Ok(())
                 }
             };
 
             match res {
                 Ok(_) => {
-                    let msg = format!("Input file: {} is valid", input.display());
+                    let msg = format!("Input file: {} is valid", input.display().bright_green());
                     flush_logger(&msg)?;
                     Ok(())
                 }
                 Err(e) => {
-                    flush_logger(&e.to_string())?;
+                    flush_logger(&e.red().bold().to_string())?;
                     exit(1);
                 }
             }
@@ -279,14 +281,22 @@ fn match_output(
         "ndjson" => ndjson_writer::ndjson_writer(data, output_file, parse_numbers)
             .context("FATAL: Serialization failed")?,
         _ => {
-            let repo_link = "https://github.com/Tahaa-Dev/fiux";
-            eprintln!(
-                "FATAL: Output extension \"{}\" is not supported currently.\n Open an issue at {}",
-                output_ext, repo_link,
-            );
-            exit(1);
+            log_invalid_ext(output_ext, true);
         }
     };
 
     Ok(())
+}
+
+#[inline]
+fn log_invalid_ext(input_ext: &str, is_output: bool) {
+    let s = if is_output { "Out" } else { "In" };
+    let repo_link = "https://github.com/Tahaa-Dev/fiux";
+
+    eprintln!(
+        "FATAL: {}put extension: [{}] is not supported currently\nOpen an issue at: {}",
+        s, input_ext.red().bold(), repo_link.bright_blue().italic(),
+    );
+
+    exit(1);
 }

@@ -192,6 +192,7 @@ pub(crate) fn write_json(
                 .write_all(b"\n]")
                 .context("FATAL: Failed to write closing bracket into output file")?;
         }
+
     }
 
     Ok(())
