@@ -125,7 +125,8 @@ fn main() -> CtxResult<(), Error> {
             // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
-                || format!("{} {} {}",
+                || format!(
+                    "{} {} {}",
                     "FATAL: Input file".red().bold(),
                     input.to_str().unwrap_or("input_file").on_bright_red(),
                     "doesn't exist".red().bold()
@@ -207,14 +208,14 @@ fn main() -> CtxResult<(), Error> {
             // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
-                || format!("{} {} {}",
+                || format!(
+                    "{} {} {}",
                     "FATAL: Input file".red().bold(),
                     input.to_str().unwrap_or("input_file").on_bright_red(),
                     "doesn't exist".red().bold()
                 ),
                 1
             );
-
 
             let i_d: char;
 
@@ -295,7 +296,9 @@ fn log_invalid_ext(input_ext: &str, is_output: bool) {
 
     eprintln!(
         "FATAL: {}put extension: [{}] is not supported currently\nOpen an issue at: {}",
-        s, input_ext.red().bold(), repo_link.bright_blue().italic(),
+        s,
+        input_ext.red().bold(),
+        repo_link.bright_blue().italic(),
     );
 
     exit(1);

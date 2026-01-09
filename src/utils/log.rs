@@ -39,7 +39,10 @@ pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Er
     } else {
         eprintln!(
             "{}\n{} Try to use {} for more information\n\n{}\n",
-            err, "Hint:".bright_green(), "`fiux validate <INPUT>`".yellow(), "---".red()
+            err,
+            "Hint:".bright_green(),
+            "`fiux validate <INPUT>`".yellow(),
+            "---".red()
         );
     }
 
