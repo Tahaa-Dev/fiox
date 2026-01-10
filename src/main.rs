@@ -110,7 +110,8 @@ use utils::*;
 
 pub(crate) static ARGS: LazyLock<FioxArgs> = LazyLock::new(FioxArgs::parse);
 
-fn main() -> CtxResult<(), Error> {
+#[inline]
+fn run() -> CtxResult<(), Error> {
     let args = &*ARGS;
 
     match &args.cmd {
@@ -126,10 +127,11 @@ fn main() -> CtxResult<(), Error> {
             throw_err_if!(
                 !Path::new(&input).exists(),
                 || format!(
-                    "{} {} {}",
-                    "FATAL: Input file".red().bold(),
+                    "{} {} {} {}",
+                    "FATAL:".red().bold(),
+                    "Input file:",
                     input.to_str().unwrap_or("input_file").on_bright_red(),
-                    "doesn't exist".red().bold()
+                    "doesn't exist"
                 ),
                 1
             );
@@ -139,7 +141,7 @@ fn main() -> CtxResult<(), Error> {
                 .write(true)
                 .append(*append)
                 .open(output)
-                .context("FATAL: Failed to open output file")?;
+                .context("Failed to open output file")?;
 
             let o_d: char;
 
@@ -160,7 +162,7 @@ fn main() -> CtxResult<(), Error> {
 
             if let Some(ch) = input_delimiter {
                 let data = csv_decoder::csv_decoder(csv_reader::csv_reader(input, *ch))
-                    .context("FATAL: Deserialization failed")?;
+                    .context("Deserialization failed")?;
 
                 match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
             } else {
@@ -173,29 +175,27 @@ fn main() -> CtxResult<(), Error> {
                 match input_ext {
                     "json" => {
                         let data = json_decoder::json_decoder(json_reader::json_reader(input))
-                            .context("FATAL: Deserialization failed")?;
+                            .context("Deserialization failed")?;
 
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "toml" => {
                         let data = toml_decoder::toml_decoder(toml_reader::toml_reader(input))
-                            .context("FATAL: Deserialization failed")?;
+                            .context("Deserialization failed")?;
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "csv" => {
                         let data = csv_decoder::csv_decoder(csv_reader::csv_reader(input, ','))
-                            .context("FATAL: Deserialization failed")?;
+                            .context("Deserialization failed")?;
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
                     "ndjson" => {
                         let data =
                             ndjson_decoder::ndjson_decoder(ndjson_reader::ndjson_reader(input))
-                                .context("FATAL: Deserialization failed")?;
+                                .context("Deserialization failed")?;
                         match_output(data, output_file, &output_ext, *parse_numbers, o_d)?;
                     }
-                    _ => {
-                        log_invalid_ext(input_ext, false);
-                    }
+                    _ => log_invalid_ext(input_ext, false)?,
                 };
             }
 
@@ -205,14 +205,14 @@ fn main() -> CtxResult<(), Error> {
         }
 
         Commands::Validate { input, delimiter } => {
-            // Check if input exists
             throw_err_if!(
                 !Path::new(&input).exists(),
                 || format!(
-                    "{} {} {}",
-                    "FATAL: Input file".red().bold(),
+                    "{} {} {} {}",
+                    "FATAL:".red().bold(),
+                    "Input file:",
                     input.to_str().unwrap_or("input_file").on_bright_red(),
-                    "doesn't exist".red().bold()
+                    "doesn't exist"
                 ),
                 1
             );
@@ -239,13 +239,7 @@ fn main() -> CtxResult<(), Error> {
                 "toml" => toml_validator::validate_toml(input),
                 "csv" => csv_validator::validate_csv(input, i_d),
                 "ndjson" => ndjson_validator::validate_ndjson(input),
-                _ => {
-                    log_invalid_ext(input_ext, false);
-
-                    // Use `Ok(())` since error won't be returned as `log_invalid_ext()` always
-                    // exits
-                    Ok(())
-                }
+                _ => log_invalid_ext(input_ext, false),
             };
 
             match res {
@@ -263,6 +257,16 @@ fn main() -> CtxResult<(), Error> {
     }
 }
 
+fn main() {
+    match run() {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("{} {}", "FATAL:".red().bold(), e);
+            exit(1);
+        }
+    }
+}
+
 #[inline]
 fn match_output(
     data: WriterStreams<impl Iterator<Item = CtxResult<DataTypes, Error>>>,
@@ -273,33 +277,30 @@ fn match_output(
 ) -> CtxResult<(), Error> {
     match output_ext {
         "json" => write_json::write_json(data, output_file, parse_numbers)
-            .context("FATAL: Serialization failed")?,
+            .context("Serialization failed")?,
         "toml" => toml_writer::toml_writer(data, output_file, parse_numbers)
-            .context("FATAL: Serialization failed")?,
-        "csv" => {
-            csv_writer::csv_writer(data, output_file, o_d).context("FATAL: Serialization failed")?
-        }
+            .context("Serialization failed")?,
+        "csv" => csv_writer::csv_writer(data, output_file, o_d).context("Serialization failed")?,
         "ndjson" => ndjson_writer::ndjson_writer(data, output_file, parse_numbers)
-            .context("FATAL: Serialization failed")?,
-        _ => {
-            log_invalid_ext(output_ext, true);
-        }
+            .context("Serialization failed")?,
+        _ => log_invalid_ext(output_ext, true)?,
     };
 
     Ok(())
 }
 
 #[inline]
-fn log_invalid_ext(input_ext: &str, is_output: bool) {
+fn log_invalid_ext(input_ext: &str, is_output: bool) -> CtxResult<(), Error> {
     let s = if is_output { "Out" } else { "In" };
     let repo_link = "https://github.com/Tahaa-Dev/fiux";
 
-    eprintln!(
-        "FATAL: {}put extension: [{}] is not supported currently\nOpen an issue at: {}",
-        s,
-        input_ext.red().bold(),
-        repo_link.bright_blue().italic(),
-    );
-
-    exit(1);
+    Err(Error::new(
+        EK::InvalidFilename,
+        format!(
+            "{}put extension: [{}] is not supported currently\nOpen an issue at: {}",
+            s,
+            input_ext.red().bold(),
+            repo_link.bright_blue().italic(),
+        ),
+    ))?
 }

@@ -16,7 +16,7 @@ static LOGGER: LazyLock<Option<Mutex<BufWriter<File>>>> = LazyLock::new(|| {
             .write(true)
             .truncate(true)
             .open(path)
-            .better_expect("FATAL: Failed to open error logging file", 1, true);
+            .better_expect("Failed to open error logging file", 1, true);
 
         Mutex::new(BufWriter::with_capacity(256, file))
     })
@@ -28,14 +28,14 @@ pub(crate) fn log_err<E: std::error::Error>(err: &ErrCtx<E>) -> CtxResult<(), Er
         let mut wtr = wtr
             .lock()
             .map_err(|_| Error::other("Failed to lock"))
-            .context("FATAL: Failed to lock log file")?;
+            .context("Failed to lock log file")?;
 
         writeln!(
             wtr,
             "{}\nHint: Try to use `fiux validate <INPUT>` for more information\n\n---\n",
             err
         )
-        .context("FATAL: Failed to write error to log")?;
+        .context("Failed to write error to log")?;
     } else {
         eprintln!(
             "{}\n{} Try to use {} for more information\n\n{}\n",
@@ -55,11 +55,11 @@ pub(crate) fn flush_logger(msg: &str) -> CtxResult<(), Error> {
         let mut wtr = wtr
             .lock()
             .map_err(|_| Error::other("Failed to lock"))
-            .context("FATAL: Failed to lock logger")?;
+            .context("Failed to lock logger")?;
 
-        wtr.write(msg.as_bytes()).context("FATAL: Failed to write status message")?;
+        wtr.write(msg.as_bytes()).context("Failed to write status message")?;
 
-        wtr.flush().context("FATAL: Failed to flush logger")?;
+        wtr.flush().context("Failed to flush logger")?;
     } else {
         eprintln!("{msg}");
     }
