@@ -45,30 +45,21 @@ pub(crate) fn ndjson_writer(
                             .map_err(|_| {
                                 Error::new(std::io::ErrorKind::WriteZero, "Failed to write")
                             })
-                            .with_context(|| format!("FATAL: Failed to write object: {}", idx))?;
+                            .with_context(|| format!("Failed to write object: {}", idx))?;
 
                         writeln!(writer).with_context(|| {
-                            format!(
-                                "FATAL: Failed to write newline delimiter after object: {}",
-                                idx
-                            )
+                            format!("Failed to write newline delimiter after object: {}", idx)
                         })?;
                     }
                 } else if let Value::Object(_) = json {
                     serde_json::to_writer(&mut writer, &json)
                         .map_err(|_| Error::new(std::io::ErrorKind::WriteZero, "Failed to write"))
                         .with_context(|| {
-                            format!(
-                                "FATAL: Failed to write NDJSON object: {} into output file",
-                                line_no
-                            )
+                            format!("Failed to write NDJSON object: {} into output file", line_no)
                         })?;
 
                     writeln!(writer).with_context(|| {
-                        format!(
-                            "FATAL: Failed to write newline delimiter after object: {}",
-                            line_no
-                        )
+                        format!("Failed to write newline delimiter after object: {}", line_no)
                     })?;
                 }
             }
@@ -90,9 +81,12 @@ pub(crate) fn ndjson_writer(
 
             for (line_no, rec) in iter.enumerate() {
                 let line_no = line_no + 1;
-                writer.write(b"{").with_context(|| format!(
-                    "FATAL: Failed to write opening curly brace for object: {} into output file", line_no
-                ))?;
+                writer.write(b"{").with_context(|| {
+                    format!(
+                        "Failed to write opening curly brace for object: {} into output file",
+                        line_no
+                    )
+                })?;
 
                 let mut first_value = true;
 
@@ -123,35 +117,33 @@ pub(crate) fn ndjson_writer(
                     }
 
                     if first_value {
-                        writer.write_all(b"\"").with_context(|| format!("FATAL: Failed to write opening quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                        writer.write_all(b"\"").with_context(|| format!("Failed to write opening quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
 
-                        writer.write_all(h.as_bytes()).with_context(|| format!("FATAL: Failed to write key in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                        writer.write_all(h.as_bytes()).with_context(|| format!("Failed to write key in key-value pair: {} in object: {} into output file", idx, line_no))?;
 
                         first_value = false;
                     } else {
                         writer
                             .write_all(b", ")
-                            .context("FATAL: Failed to write comma into output file")?;
+                            .context("Failed to write comma into output file")?;
 
-                        writer.write_all(b"\"").with_context(|| format!("FATAL: Failed to write opening quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                        writer.write_all(b"\"").with_context(|| format!("Failed to write opening quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
 
-                        writer.write_all(h.as_bytes()).with_context(|| format!("FATAL: Failed to write key in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                        writer.write_all(h.as_bytes()).with_context(|| format!("Failed to write key in key-value pair: {} in object: {} into output file", idx, line_no))?;
                     }
-                    writer.write_all(b"\"").with_context(|| format!("FATAL: Failed to write closing quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                    writer.write_all(b"\"").with_context(|| format!("Failed to write closing quote for key in key-value pair: {} in object: {} into output file", idx, line_no))?;
 
-                    writer
-                        .write_all(b": ")
-                        .context("FATAL: Failed to write colon into output file")?;
+                    writer.write_all(b": ").context("Failed to write colon into output file")?;
 
-                    writer.write_all(esc_buf.as_slice()).with_context(|| format!("FATAL: Failed to write value in key-value pair: {} in object: {} into output file", idx, line_no))?;
+                    writer.write_all(esc_buf.as_slice()).with_context(|| format!("Failed to write value in key-value pair: {} in object: {} into output file", idx, line_no))?;
                 }
 
                 writer.write_all(b"}\n").with_context(|| format!(
-                    "FATAL: Failed to write closing curly brace and newline delimiter for object: {} into output file", line_no
+                    "Failed to write closing curly brace and newline delimiter for object: {} into output file", line_no
                 ))?;
             }
 
-            writer.flush().context("FATAL: Failed to flush final bytes into output file")?;
+            writer.flush().context("Failed to flush final bytes into output file")?;
         }
 
         WriterStreams::Ndjson { values } => {
@@ -166,9 +158,7 @@ pub(crate) fn ndjson_writer(
 
                 serde_json::to_writer(&mut writer, &json)
                     .map_err(|_| Error::new(std::io::ErrorKind::WriteZero, "Failed to write"))
-                    .with_context(|| {
-                        format!("FATAL: Failed to write NDJSON object: {}", line_no + 1)
-                    })?;
+                    .with_context(|| format!("Failed to write NDJSON object: {}", line_no + 1))?;
             }
         }
     }

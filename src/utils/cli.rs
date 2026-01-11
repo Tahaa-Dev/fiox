@@ -29,7 +29,7 @@ fiux: The fastest streaming-first file conveter.
     about = "The fastest utility for converting between file formats.",
     long_about = LONG_ABT
 )]
-pub struct FioxArgs {
+pub struct Args {
     #[command(subcommand)]
     pub cmd: Commands,
 

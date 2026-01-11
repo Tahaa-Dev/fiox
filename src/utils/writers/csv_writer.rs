@@ -14,7 +14,7 @@ pub(crate) fn csv_writer(
 
     throw_err_if!(
         !delimiter.is_ascii(),
-        || format!("FATAL: Output delimiter: {} is not valid UTF-8", delimiter),
+        || format!("Output delimiter: {} is not valid UTF-8", delimiter),
         1
     );
 
@@ -39,15 +39,13 @@ pub(crate) fn csv_writer(
                     });
                 wtr.write_record(&b)
                     .map_err(|_| Error::other("Failed to write CSV record"))
-                    .with_context(|| {
-                        format!("FATAL: Failed to write CSV record at: {}", line_no + 1)
-                    })?;
+                    .with_context(|| format!("Failed to write CSV record at: {}", line_no + 1))?;
             }
 
             // flush writer
             wtr.flush()
                 .map_err(|_| Error::other("Failed to flush"))
-                .context("FATAL: Failed to flush final bytes into output file")?;
+                .context("Failed to flush final bytes into output file")?;
         }
         _ => {
             eprintln!("CSV only supports table-based formats with headers");

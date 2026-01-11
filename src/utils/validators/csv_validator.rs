@@ -11,7 +11,7 @@ pub(crate) fn validate_csv(path: &PathBuf, delimiter: char) -> CtxResult<(), std
 
     throw_err_if!(
         !delimiter.is_ascii(),
-        || format!("FATAL: Input delimiter: {} is not valid UTF-8", delimiter),
+        || format!("Input delimiter: {} is not valid UTF-8", delimiter),
         1
     );
 

@@ -26,15 +26,12 @@ pub(crate) fn write_json(
                 serde_json::to_writer_pretty(&mut buffered_writer, &valid_obj)
                     .map_err(|_| Error::other("Failed to write into file"))
                     .context("Failed to write object into output JSON file")
-                    .context("This might be because the object is invalid JSON")?;
+                    .context("This might be caused by invalid JSON")?;
 
-                writeln!(buffered_writer)
-                    .context("FATAL: Failed to write newline into output file")?;
+                writeln!(buffered_writer).context("Failed to write newline into output file")?;
             }
 
-            buffered_writer
-                .flush()
-                .context("FATAL: Failed to flush final bytes into output file")?;
+            buffered_writer.flush().context("Failed to flush final bytes into output file")?;
         }
 
         WriterStreams::Table { headers, iter } => {
@@ -44,7 +41,7 @@ pub(crate) fn write_json(
 
             buffered_writer
                 .write_all(b"[\n")
-                .context("FATAL: Failed to write opening bracket into output file")?;
+                .context("Failed to write opening bracket into output file")?;
 
             let headers: Vec<String> = headers
                 .iter()
@@ -62,14 +59,20 @@ pub(crate) fn write_json(
             for (line_no, rec) in iter.enumerate() {
                 let line = line_no + 1;
                 if first_obj {
-                    buffered_writer
-                        .write_all(b"  {\n")
-                        .with_context(|| format!("FATAL: Failed to write opening curly brace for record: {} into output file", line))?;
+                    buffered_writer.write_all(b"  {\n").with_context(|| {
+                        format!(
+                            "Failed to write opening curly brace for record: {} into output file",
+                            line
+                        )
+                    })?;
                     first_obj = false;
                 } else {
-                    buffered_writer
-                        .write_all(b",\n  {\n")
-                        .with_context(|| format!("FATAL: Failed to write opening curly brace for record: {} into output file", line))?;
+                    buffered_writer.write_all(b",\n  {\n").with_context(|| {
+                        format!(
+                            "Failed to write opening curly brace for record: {} into output file",
+                            line
+                        )
+                    })?;
                 }
 
                 let mut first_value = true;
@@ -104,50 +107,54 @@ pub(crate) fn write_json(
                     if first_value {
                         buffered_writer
                             .write(b"    \"")
-                            .with_context(|| format!("FATAL: Failed to write quotes for key: {} for record: {} into output file", idx, line))?;
+                            .with_context(|| format!("Failed to write quotes for key: {} for record: {} into output file", idx, line))?;
                         first_value = false;
                     } else {
                         buffered_writer
                             .write(b",\n    \"")
-                            .with_context(|| format!("FATAL: Failed to write quotes for key: {} for record: {} into output file", idx, line))?;
+                            .with_context(|| format!("Failed to write quotes for key: {} for record: {} into output file", idx, line))?;
                     }
 
                     buffered_writer.write_all(h.as_bytes()).with_context(|| {
                         format!(
-                            "FATAL: Failed to write key: {} for record: {} into output file",
+                            "Failed to write key: {} for record: {} into output file",
                             idx, line
                         )
                     })?;
 
-                    buffered_writer
-                        .write_all(b"\": ")
-                        .with_context(|| format!("FATAL: Failed to write quotes for key: {} for record: {} into output file", idx, line))?;
+                    buffered_writer.write_all(b"\": ").with_context(|| {
+                        format!(
+                            "Failed to write quotes for key: {} for record: {} into output file",
+                            idx, line
+                        )
+                    })?;
 
                     buffered_writer.write_all(esc_buf.as_slice()).with_context(|| {
                         format!(
-                            "FATAL: Failed to write field: {} for record: {} into output file",
+                            "Failed to write field: {} for record: {} into output file",
                             idx, line
                         )
                     })?;
                 }
 
-                buffered_writer
-                    .write_all(b"\n  }")
-                    .with_context(|| format!("FATAL: Failed to write closing curly brace for record: {} into output file", line))?;
+                buffered_writer.write_all(b"\n  }").with_context(|| {
+                    format!(
+                        "Failed to write closing curly brace for record: {} into output file",
+                        line
+                    )
+                })?;
             }
             buffered_writer
                 .write_all(b"\n]")
-                .context("FATAL: Failed to write closing bracket into output file")?;
+                .context("Failed to write closing bracket into output file")?;
 
-            buffered_writer
-                .flush()
-                .context("FATAL: Failed to flush final bytes into output file")?;
+            buffered_writer.flush().context("Failed to flush final bytes into output file")?;
         }
 
         WriterStreams::Ndjson { values } => {
             buffered_writer
                 .write_all(b"[\n")
-                .context("FATAL: Failed to write opening bracket into output file")?;
+                .context("Failed to write opening bracket into output file")?;
 
             let mut first = true;
 
@@ -166,23 +173,20 @@ pub(crate) fn write_json(
                     serde_json::to_writer_pretty(&mut buffered_writer, &obj)
                         .map_err(|_| Error::other("Failed to write into file"))
                         .with_context(|| {
-                            format!("FATAL: Failed to write record: {} into output JSON file", idx)
+                            format!("Failed to write record: {} into output JSON file", idx)
                         })
                         .context("Error might be caused by invalid NDJSON values in input file")?;
 
                     first = false;
                 } else {
                     buffered_writer.write_all(b",\n").with_context(|| {
-                        format!(
-                            "FATAL: Failed to write comma after record: {} into output file",
-                            idx
-                        )
+                        format!("Failed to write comma after record: {} into output file", idx)
                     })?;
 
                     serde_json::to_writer_pretty(&mut buffered_writer, &obj)
                         .map_err(|_| Error::other("Failed to write into file"))
                         .with_context(|| {
-                            format!("FATAL: Failed to write record: {} into output JSON file", idx)
+                            format!("Failed to write record: {} into output JSON file", idx)
                         })
                         .context("Error might be caused by invalid NDJSON values in input file")?;
                 }
@@ -190,7 +194,7 @@ pub(crate) fn write_json(
 
             buffered_writer
                 .write_all(b"\n]")
-                .context("FATAL: Failed to write closing bracket into output file")?;
+                .context("Failed to write closing bracket into output file")?;
         }
     }
 
